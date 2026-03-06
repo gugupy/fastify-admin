@@ -31,11 +31,23 @@ async function main() {
     console.log('\nFastify Admin — Create Admin User');
     console.log('─'.repeat(34) + '\n');
 
+    const { orm } = await initORM();
+    const em = orm.em.fork();
+
     let email: string;
     while (true) {
         email = await ask('Email:     ');
-        if (email && email.includes('@')) break;
-        console.log('  Please enter a valid email address.');
+        if (!email || !email.includes('@')) { console.log('  Please enter a valid email address.'); continue; }
+        if (await em.findOne(User, { email })) { console.log('  Email is already taken.'); continue; }
+        break;
+    }
+
+    let username: string;
+    while (true) {
+        username = await ask('Username:  ');
+        if (!username || username.length < 2) { console.log('  Username must be at least 2 characters.'); continue; }
+        if (await em.findOne(User, { username })) { console.log('  Username is already taken.'); continue; }
+        break;
     }
 
     let fullName: string;
@@ -55,17 +67,7 @@ async function main() {
     rl.close();
     console.log('\nCreating user…');
 
-    const { orm } = await initORM();
-    const em = orm.em.fork();
-
-    const existing = await em.findOne(User, { email });
-    if (existing) {
-        console.error(`\nError: a user with email "${email}" already exists.`);
-        await orm.close();
-        process.exit(1);
-    }
-
-    const user = em.create(User, { fullName, email, password: await hashPassword(password) });
+    const user = em.create(User, { fullName, username, email, password: await hashPassword(password) });
     await em.persistAndFlush(user);
 
     const adminRole = await em.findOne(Role, { name: 'Admin' }, { populate: ['users'] });

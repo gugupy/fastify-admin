@@ -494,7 +494,7 @@
           ],
           "composite": false,
           "constraint": true,
-          "keyName": "user_username_key",
+          "keyName": "user_username_unique",
           "unique": true,
           "primary": false
         }

@@ -5,7 +5,11 @@ export type AuthUser = {
   id: number;
   username: string;
   email: string;
-  fullName?: string;
+  fullName: string;
+  bio: string;
+  mfaEnabled: boolean;
+  hasPassword: boolean;
+  oauthProvider: string | null;
   permissions: string[];
 };
 

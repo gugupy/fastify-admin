@@ -38,6 +38,7 @@ function SignupPage() {
   const { refresh } = useRbac();
   const router = useRouter();
   const [username, setUsername] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,6 +52,20 @@ function SignupPage() {
   useEffect(() => {
     if (otpSent) inputRefs.current[0]?.focus();
   }, [otpSent]);
+
+  useEffect(() => {
+    if (username.length < 2) {
+      setUsernameStatus("idle");
+      return;
+    }
+    setUsernameStatus("checking");
+    const timer = setTimeout(async () => {
+      const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(username)}`);
+      const body = await res.json().catch(() => ({}));
+      setUsernameStatus(body.available ? "available" : "taken");
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [username]);
 
   const { google, github, microsoft } = getAdmin().oauth;
   const hasOAuth = google || github || microsoft;
@@ -270,15 +285,30 @@ function SignupPage() {
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 <Field>
                   <FieldLabel htmlFor="username">Username</FieldLabel>
-                  <Input
-                    id="username"
-                    type="text"
-                    autoComplete="username"
-                    placeholder="janedoe"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="username"
+                      type="text"
+                      autoComplete="username"
+                      placeholder="janedoe"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="pr-8"
+                      required
+                    />
+                    {usernameStatus === "checking" && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">…</span>
+                    )}
+                    {usernameStatus === "available" && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-500">✓</span>
+                    )}
+                    {usernameStatus === "taken" && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-destructive">✗</span>
+                    )}
+                  </div>
+                  {usernameStatus === "taken" && (
+                    <FieldError>Username is already taken.</FieldError>
+                  )}
                 </Field>
 
                 <Field>
@@ -342,7 +372,7 @@ function SignupPage() {
 
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || usernameStatus === "taken" || usernameStatus === "checking"}
                   size="lg"
                   className="w-full mt-1"
                 >

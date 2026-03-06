@@ -9,6 +9,9 @@ export class User {
     @PrimaryKey()
     id!: number;
 
+    @Property({ unique: true })
+    username!: string;
+
     @Property()
     fullName!: string;
 
