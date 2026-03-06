@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fastify-admin — Admin panel for Fastify + MikroORM</title>
+  <meta name="description" content="A self-hosted, fully-featured admin panel plugin for Fastify and MikroORM. Authentication, RBAC, entity CRUD, dark mode — zero config." />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg-muted: #f4f4f5;
+      --bg-muted-hover: #e4e4e7;
+      --fg: #09090b;
+      --fg-muted: #71717a;
+      --border: #e4e4e7;
+      --code-bg: #f4f4f5;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+    .dark {
+      --bg: #09090b;
+      --bg-muted: #18181b;
+      --bg-muted-hover: #27272a;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --border: #27272a;
+      --code-bg: #18181b;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+      transition: background 0.2s, color 0.2s;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Nav ── */
+    #nav {
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 56px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; color: var(--fg);
+      font-weight: 600; font-size: 0.9rem; letter-spacing: -0.01em;
+    }
+    .nav-icon {
+      width: 28px; height: 28px;
+      background: var(--fg); color: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .nav-right { display: flex; align-items: center; gap: 8px; }
+    .nav-link {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      font-size: 0.8rem; text-decoration: none;
+      color: var(--fg-muted); transition: color 0.15s, background 0.15s;
+    }
+    .nav-link:hover { color: var(--fg); background: var(--bg-muted); }
+    .theme-toggle {
+      display: flex; align-items: center; gap: 2px;
+      border: 1px solid var(--border);
+      padding: 3px; background: var(--bg);
+    }
+    .theme-btn {
+      border: none; cursor: pointer; padding: 4px 6px;
+      background: transparent;
+      color: var(--fg-muted); font-size: 11px; line-height: 1;
+      transition: background 0.15s, color 0.15s;
+    }
+    .theme-btn.active { background: var(--fg); color: var(--bg); }
+
+    /* ── Layout ── */
+    .container { max-width: 960px; margin: 0 auto; padding: 0 2rem; }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 60px 0 160px;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px;
+      border: 1px solid var(--border); background: var(--bg-muted);
+      font-size: 0.75rem; color: var(--fg-muted);
+      margin-bottom: 28px;
+      opacity: 0;
+    }
+    .hero-badge span { width: 6px; height: 6px; background: var(--fg); display: inline-block; }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 700; letter-spacing: -0.03em;
+      line-height: 1.1; margin-bottom: 20px;
+      opacity: 0;
+    }
+    .hero h1 em { font-style: normal; color: var(--fg-muted); }
+    .hero-sub {
+      font-size: 1.05rem; color: var(--fg-muted);
+      max-width: 520px; margin: 0 auto 40px;
+      opacity: 0;
+    }
+    .hero-actions {
+      display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+      margin-bottom: 48px;
+      opacity: 0;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px;
+      font-size: 0.85rem; font-weight: 500;
+      text-decoration: none; border: none; cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn-primary { background: var(--fg); color: var(--bg); }
+    .btn-outline {
+      background: transparent; color: var(--fg);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { background: var(--bg-muted); opacity: 1; }
+    .install-block {
+      display: inline-flex; align-items: center; gap: 12px;
+      background: var(--bg-muted); border: 1px solid var(--border);
+      padding: 12px 20px;
+      font-family: var(--font-mono); font-size: 0.85rem;
+      opacity: 0; cursor: pointer; position: relative;
+    }
+    .install-block .prompt { color: var(--fg-muted); user-select: none; }
+    .install-block .cmd { color: var(--fg); }
+    .copy-hint {
+      font-family: var(--font); font-size: 0.75rem;
+      color: var(--fg-muted); margin-left: 4px;
+      transition: opacity 0.2s;
+    }
+
+    /* ── Section ── */
+    section { padding: 80px 0; }
+    section + section { border-top: 1px solid var(--border); }
+    .section-label {
+      font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--fg-muted);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 700; letter-spacing: -0.02em;
+      line-height: 1.2; margin-bottom: 16px;
+    }
+    .section-sub {
+      color: var(--fg-muted); font-size: 0.95rem;
+      max-width: 480px; margin-bottom: 48px;
+    }
+
+    /* ── Why ── */
+    #why { padding: 80px 0; border-bottom: 1px solid var(--border); }
+    .why-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0; border: 1px solid var(--border);
+      margin-top: 48px;
+    }
+    .why-item {
+      padding: 32px 28px; border-right: 1px solid var(--border);
+    }
+    .why-item:last-child { border-right: none; }
+    .why-item .why-icon {
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border: 1px solid var(--border);
+      margin-bottom: 18px; color: var(--fg);
+    }
+    .why-item h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+    .why-item p { font-size: 0.9rem; color: var(--fg-muted); line-height: 1.6; margin: 0; }
+    @media (max-width: 700px) {
+      .why-item { border-right: none; border-bottom: 1px solid var(--border); }
+      .why-item:last-child { border-bottom: none; }
+    }
+
+    /* ── Features ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      background: var(--border);
+    }
+    .feature-card {
+      background: var(--bg);
+      padding: 28px;
+      opacity: 0; transform: translateY(20px);
+    }
+    .feature-icon {
+      width: 36px; height: 36px;
+      background: var(--bg-muted); color: var(--fg);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px; font-size: 16px;
+    }
+    .feature-card h3 {
+      font-size: 0.9rem; font-weight: 600;
+      margin-bottom: 6px; letter-spacing: -0.01em;
+    }
+    .feature-card p { font-size: 0.83rem; color: var(--fg-muted); line-height: 1.55; }
+
+    /* ── Code block ── */
+    .code-section { background: var(--bg-muted); }
+    .code-wrap {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+      align-items: start;
+    }
+    @media (max-width: 700px) { .code-wrap { grid-template-columns: 1fr; } }
+    .code-block {
+      background: var(--bg); border: 1px solid var(--border);
+      overflow: hidden;
+      opacity: 0; transform: translateY(24px);
+    }
+    .code-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px; border-bottom: 1px solid var(--border);
+      font-size: 0.75rem; color: var(--fg-muted);
+    }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dot { width: 10px; height: 10px; background: var(--border); }
+    pre {
+      padding: 20px; font-family: var(--font-mono);
+      font-size: 0.8rem; line-height: 1.7; overflow-x: auto;
+      color: var(--fg);
+    }
+    .kw { color: var(--fg-muted); }
+    .fn { color: var(--fg); font-weight: 500; }
+    .str { color: var(--fg-muted); }
+    .cm { color: var(--fg-muted); opacity: 0.5; }
+
+    /* ── Steps ── */
+    .steps { display: flex; flex-direction: column; gap: 0; }
+    .step {
+      display: flex; gap: 16px; padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+      opacity: 0; transform: translateX(-16px);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 28px; height: 28px;
+      background: var(--fg); color: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 600; flex-shrink: 0;
+    }
+    .step-body h4 { font-size: 0.88rem; font-weight: 600; margin-bottom: 4px; }
+    .step-body p { font-size: 0.82rem; color: var(--fg-muted); }
+    .step-body code {
+      font-family: var(--font-mono); font-size: 0.78rem;
+      background: var(--bg-muted); padding: 1px 6px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Roadmap ── */
+    .roadmap-group-label {
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--bg);
+      background: var(--fg);
+      display: inline-block; padding: 3px 10px;
+      margin-bottom: -1px;
+    }
+    .roadmap-group-label--considering {
+      background: var(--bg-muted); color: var(--fg-muted);
+      border: 1px solid var(--border);
+      margin-top: 32px;
+    }
+    .roadmap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      background: var(--border);
+    }
+    .roadmap-grid--considering {
+      background: var(--border);
+      opacity: 0.8;
+    }
+    .roadmap-grid { counter-reset: roadmap-counter; }
+    .roadmap-item {
+      background: var(--bg);
+      padding: 28px;
+      opacity: 0; transform: translateY(20px);
+      counter-increment: roadmap-counter;
+    }
+    .roadmap-grid--considering { counter-reset: roadmap-counter; }
+    .roadmap-grid--considering .roadmap-item {
+      background: var(--bg-muted);
+    }
+    .roadmap-item h3 {
+      font-size: 0.9rem; font-weight: 600;
+      margin-bottom: 6px; letter-spacing: -0.01em;
+    }
+    .roadmap-grid:not(.roadmap-grid--considering) .roadmap-item h3::before {
+      content: counter(roadmap-counter) ". ";
+      color: var(--fg-muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .roadmap-item p { font-size: 0.83rem; color: var(--fg-muted); line-height: 1.55; }
+
+    /* ── Author ── */
+    #author { padding: 80px 0; border-top: 1px solid var(--border); }
+    .author-card {
+      display: flex; align-items: flex-start; gap: 24px;
+      border: 1px solid var(--border); padding: 32px;
+      background: var(--bg-muted);
+    }
+    @media (max-width: 600px) { .author-card { flex-direction: column; } }
+    .author-avatar {
+      width: 64px; height: 64px; flex-shrink: 0;
+      object-fit: cover;
+    }
+    .author-name {
+      font-size: 0.95rem; font-weight: 600;
+      margin-bottom: 6px; letter-spacing: -0.01em;
+    }
+    .author-alias { color: var(--fg-muted); font-weight: 400; }
+    .author-bio { font-size: 0.83rem; color: var(--fg-muted); margin-bottom: 14px; line-height: 1.55; }
+    .author-links { display: flex; flex-wrap: wrap; gap: 16px; }
+    .author-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.82rem; color: var(--fg-muted);
+      text-decoration: none; transition: color 0.15s;
+    }
+    .author-link:hover { color: var(--fg); }
+
+    /* ── Section nav ── */
+    .section-nav {
+      position: fixed; right: 24px; top: 50%;
+      transform: translateY(-50%);
+      display: flex; flex-direction: column; align-items: flex-end;
+      z-index: 40;
+    }
+    .section-nav a {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; color: var(--fg-muted);
+      font-size: 0.72rem; letter-spacing: 0.04em;
+      transition: color 0.15s;
+      justify-content: flex-end;
+      position: relative;
+      padding: 7px 0;
+    }
+    /* vertical line through the dots */
+    .section-nav a::before {
+      content: '';
+      position: absolute; right: 2.5px; top: 0; bottom: 0;
+      width: 1px; background: var(--border);
+      z-index: -1;
+    }
+    .section-nav a:first-child::before { top: 50%; }
+    .section-nav a:last-child::before  { bottom: 50%; }
+    .section-nav a::after {
+      content: '';
+      display: block; width: 6px; height: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      transition: background 0.15s, width 0.2s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .section-nav a:hover::after { border-color: var(--fg-muted); }
+    .section-nav a.active { color: var(--fg); }
+    .section-nav a.active::after { background: var(--fg); border-color: var(--fg); width: 10px; }
+    .section-nav .nav-label {
+      opacity: 0; transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+    .section-nav a:hover .nav-label,
+    .section-nav a.active .nav-label { opacity: 1; }
+    @media (max-width: 1100px) { .section-nav { display: none; } }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+    }
+    .footer-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-left { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--fg-muted); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a {
+      font-size: 0.82rem; color: var(--fg-muted);
+      text-decoration: none; transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--fg); }
+
+    /* ── Util ── */
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+    @media (max-width: 600px) {
+      .hero { min-height: 100svh; padding: 60px 0 40px; }
+      nav { padding: 0 1rem; }
+      .container { padding: 0 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ─────────────────────────────────────────────── -->
+<nav id="nav">
+  <a href="#" class="nav-logo">
+    <div class="nav-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13 2L4.5 13.5H12L11 22L19.5 10.5H12L13 2Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+    </div>
+    fastify-admin
+  </a>
+  <div class="nav-right">
+    <a href="https://github.com/gugupy/fastify-admin/tree/main/docs" class="nav-link" target="_blank" rel="noopener">Docs</a>
+    <a href="https://github.com/gugupy/fastify-admin" class="nav-link" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+      GitHub
+    </a>
+    <div class="theme-toggle" id="themeToggle">
+      <button class="theme-btn" data-theme="light" title="Light">☀</button>
+      <button class="theme-btn active" data-theme="system" title="System">⊙</button>
+      <button class="theme-btn" data-theme="dark" title="Dark">☽</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Section nav ──────────────────────────────────────── -->
+<nav class="section-nav" aria-label="Page sections">
+  <a href="#why"><span class="nav-label">Why</span></a>
+  <a href="#features"><span class="nav-label">Features</span></a>
+  <a href="#quickstart"><span class="nav-label">Quick start</span></a>
+  <a href="#roadmap"><span class="nav-label">Roadmap</span></a>
+  <a href="#author"><span class="nav-label">Author</span></a>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────── -->
+<div class="hero">
+  <div class="container">
+    <div class="hero-badge" id="heroBadge">
+      <span></span> Open source · MIT license
+    </div>
+    <h1 id="heroTitle">Admin panel for<br/><em>Fastify + MikroORM</em></h1>
+    <p class="hero-sub" id="heroSub">
+      Drop in a plugin. Get authentication, role-based access control,
+      entity CRUD, and a polished UI — in minutes.
+    </p>
+    <div class="hero-actions" id="heroActions">
+      <a href="https://github.com/gugupy/fastify-admin" class="btn btn-primary" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+        View on GitHub
+      </a>
+      <a href="#quickstart" class="btn btn-outline">Quick start →</a>
+    </div>
+    <div class="install-block" id="installBlock" onclick="copyInstall(this)">
+      <span class="prompt">$</span>
+      <span class="cmd">npm install fastify-admin</span>
+      <span class="copy-hint" id="copyHint">click to copy</span>
+    </div>
+  </div>
+</div>
+<hr style="border:none;border-top:1px solid var(--border);margin:0;">
+
+<!-- ── Why ──────────────────────────────────────────────── -->
+<section id="why">
+  <div class="container">
+    <div class="section-label">Why fastify-admin</div>
+    <h2 class="section-title">Built to give, not to sell</h2>
+    <div class="why-grid">
+      <div class="why-item">
+        <span class="why-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg></span>
+        <h3>Free forever</h3>
+        <p>MIT licensed. No tiers, no paywalls, no seats. Take it, use it, ship it — no strings attached.</p>
+      </div>
+      <div class="why-item">
+        <span class="why-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></span>
+        <h3>Learn by doing</h3>
+        <p>The source is yours to read. See how auth flows, RBAC, CRUD, and real-world Fastify plugins are built — then apply it to your own work.</p>
+      </div>
+      <div class="why-item">
+        <span class="why-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+        <h3>Skip the boilerplate</h3>
+        <p>Stop rebuilding the same admin panel for every project. One plugin install and you're done — more time for the product that actually matters.</p>
+      </div>
+      <div class="why-item">
+        <span class="why-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span>
+        <h3>Community driven</h3>
+        <p>Built in the open, shaped by real use cases. Open issues, send PRs, share ideas — this grows with the people who use it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ─────────────────────────────────────────── -->
+<section id="features">
+  <div class="container">
+    <div class="section-label">Batteries included</div>
+    <h2 class="section-title">Everything your admin needs</h2>
+    <p class="section-sub">One plugin, zero boilerplate. Works with any MikroORM entity.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        </div>
+        <h3>Authentication</h3>
+        <p>Email + password login, OAuth (Google, GitHub, Microsoft), JWT session cookies, and signup flows out of the box.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <h3>Role-based access</h3>
+        <p>Fine-grained per-entity permissions. Roles and permissions are seeded automatically and fully manageable in the UI.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+        </div>
+        <h3>Entity CRUD</h3>
+        <p>Auto-generated list, show, edit, and create views for every MikroORM entity. Customise columns, fields, and operations per entity.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+        </div>
+        <h3>MFA support</h3>
+        <p>Optional two-factor authentication via email OTP. Enable per user from the profile settings — no extra configuration.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </div>
+        <h3>Dark mode</h3>
+        <p>Light, dark, and system-preference modes with a persistent toggle. Every component respects the active theme.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/></svg>
+        </div>
+        <h3>Plugin API</h3>
+        <p>Standard Fastify plugin. Wraps any existing app. Fully typed — configure entity labels, icons, field order, and custom operations.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Quick start ───────────────────────────────────────── -->
+<section id="quickstart" class="code-section">
+  <div class="container">
+    <div class="section-label">Get started</div>
+    <h2 class="section-title">Up in five minutes</h2>
+    <div class="code-wrap">
+      <div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>Install the package</h4>
+              <p>Add <code>fastify-admin</code> to your Fastify project alongside MikroORM.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>Register the plugin</h4>
+              <p>Pass your ORM instance and optional resource configs. Everything else is handled automatically.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>Create an admin user</h4>
+              <p>Run <code>npx create-admin</code> once to seed your first admin account and start exploring.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h4>Customise</h4>
+              <p>Override labels, icons, field order, operations, and permissions per entity — all in TypeScript.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="code-block" id="codeBlock">
+        <div class="code-header">
+          <div class="code-dots">
+            <div class="code-dot"></div>
+            <div class="code-dot"></div>
+            <div class="code-dot"></div>
+          </div>
+          <span>plugin registration</span>
+        </div>
+        <pre><span class="kw">import</span> { createAdminPlugin } <span class="kw">from</span> <span class="str">'fastify-admin'</span>
+<span class="kw">import</span> { MikroORM } <span class="kw">from</span> <span class="str">'@mikro-orm/postgresql'</span>
+
+<span class="kw">const</span> orm = <span class="kw">await</span> MikroORM.<span class="fn">init</span>()
+
+<span class="kw">await</span> app.<span class="fn">register</span>(createAdminPlugin, {
+  orm,
+  name: <span class="str">'My Admin'</span>,
+  resources: {
+    post: {
+      icon: <span class="str">'FileText'</span>,
+      list: { columns: [<span class="str">'id'</span>, <span class="str">'title'</span>, <span class="str">'author'</span>] },
+      edit: { fields: [<span class="str">'title'</span>, <span class="str">'body'</span>, <span class="str">'author'</span>] },
+    },
+  },
+})
+
+<span class="cm">// admin UI is now live at /</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Roadmap ────────────────────────────────────────────── -->
+<section id="roadmap">
+  <div class="container">
+    <div class="section-label">What's next</div>
+    <h2 class="section-title">Roadmap</h2>
+    <p class="section-sub">Planned features and improvements. Contributions welcome.</p>
+    <div class="roadmap-group-label">Planned</div>
+    <div class="roadmap-grid" id="roadmapPlanned">
+      <div class="roadmap-item">
+        <h3>Test coverage</h3>
+        <p>Full test suite using Vitest and Testing Library — unit tests for backend utilities, integration tests for API routes and RBAC enforcement, and component tests for the UI.</p>
+      </div>
+      <div class="roadmap-item">
+        <h3>Documentation site</h3>
+        <p>Dedicated docs site with guides, API reference, configuration options, and recipes for common patterns.</p>
+      </div>
+      <div class="roadmap-item">
+        <h3>CLI (<code>npx fastify-admin</code>)</h3>
+        <p>First-party command-line tool for scaffolding, migrations, and user management — <code>init</code>, <code>migrate:up</code>, <code>create-admin</code>, and more. No package manager scripts required.</p>
+      </div>
+      <div class="roadmap-item">
+        <h3>Lifecycle hooks</h3>
+        <p>Per-entity async hooks — <code>beforeCreate</code>, <code>afterCreate</code>, <code>beforeUpdate</code>, <code>afterUpdate</code>, <code>beforeDelete</code>, <code>afterDelete</code> — to run custom logic, validations, or side effects around every data operation.</p>
+      </div>
+      <div class="roadmap-item">
+        <h3>Audit log</h3>
+        <p>Built-in activity log that tracks who created, updated, or deleted every record — with timestamps and diffs.</p>
+      </div>
+      <div class="roadmap-item">
+        <h3>OpenAPI &amp; API Explorer</h3>
+        <p>Auto-generated OpenAPI 3.1 spec from MikroORM entity metadata. Scalar UI embedded in the sidebar — auth pre-filled, dark mode native, request playground included.</p>
+      </div>
+      <div class="roadmap-item">
+        <h3>Internationalisation (i18n)</h3>
+        <p>Full UI localisation with pluggable locale files. Translate labels, messages, and validation errors into any language.</p>
+      </div>
+    </div>
+
+    <div class="roadmap-group-label roadmap-group-label--considering">Considering</div>
+    <div class="roadmap-grid roadmap-grid--considering">
+      <div class="roadmap-item">
+        <h3>Log monitoring integration</h3>
+        <p>Ship admin activity and application logs to external monitors — Kibana, Datadog, Grafana Loki, or any OpenTelemetry-compatible sink — via a pluggable transport config.</p>
+      </div>
+      <div class="roadmap-item">
+        <h3>Multi-tenancy</h3>
+        <p>Isolate data per tenant with schema-level or row-level separation. Each tenant gets its own scoped view, users, and permissions.</p>
+      </div>
+      <div class="roadmap-item">
+        <h3>Charts &amp; reports</h3>
+        <p>Built-in charting for entity data — bar, line, and pie charts configurable per entity. Export reports as CSV or PDF directly from the admin panel.</p>
+      </div>
+      <div class="roadmap-item">
+        <h3>Custom dashboard widgets</h3>
+        <p>Pluggable dashboard with stat cards, charts, and activity feeds built from your own entity data.</p>
+      </div>
+      <div class="roadmap-item">
+        <h3>ORM adapters</h3>
+        <p>Adapter layer to support other ORMs — Prisma, TypeORM, Drizzle — beyond the current MikroORM integration.</p>
+      </div>
+      <div class="roadmap-item">
+        <h3>AI integration</h3>
+        <p>Natural language search across entities, smart data summaries, anomaly detection, and a chat interface for querying your data — powered by your choice of provider (Anthropic, OpenAI).</p>
+      </div>
+      <div class="roadmap-item">
+        <h3>Extendable built-in entities</h3>
+        <p>Extend <code>User</code>, <code>Role</code>, and <code>Permission</code> with your own fields and relations without forking core entities. <code>AdminResource</code> is already subclassable today — this brings the same flexibility to the entities themselves.</p>
+      </div>
+      <div class="roadmap-item">
+        <h3>Customisable theme builder</h3>
+        <p>Brand the admin panel to match your product — configure primary colours, typography, and logo via plugin options or a live theme editor, without touching any source files.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Author ─────────────────────────────────────────────── -->
+<section id="author">
+  <div class="container">
+    <div class="author-card">
+      <img src="https://github.com/gugupy.png" alt="Gughanathan Mani" class="author-avatar" />
+      <div class="author-body">
+        <div class="author-name">Gughanathan Mani <span class="author-alias">— Gugu</span></div>
+        <p class="author-bio">Building fastify-admin as an open-source project. Contributions, issues, and feedback are welcome.</p>
+        <div class="author-links">
+          <a href="https://github.com/gugupy" target="_blank" rel="noopener" class="author-link">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+            gugupy
+          </a>
+          <a href="mailto:gugu.ap900@gmail.com" class="author-link">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16"/><polyline points="2,4 12,13 22,4"/></svg>
+            gugu.ap900@gmail.com
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ────────────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <div class="nav-icon" style="width:22px;height:22px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13 2L4.5 13.5H12L11 22L19.5 10.5H12L13 2Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span>fastify-admin — MIT license &nbsp;·&nbsp; Inspired by <a href="https://flask-appbuilder.readthedocs.io" target="_blank" rel="noopener" style="color:var(--fg-muted);text-decoration:underline;text-underline-offset:3px;">Flask-AppBuilder</a> &nbsp;·&nbsp; Admin UI built with <a href="https://ui.shadcn.com" target="_blank" rel="noopener" style="color:var(--fg-muted);text-decoration:underline;text-underline-offset:3px;">shadcn/ui</a></span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/gugupy/fastify-admin/tree/main/docs" target="_blank">Docs</a>
+        <a href="https://github.com/gugupy/fastify-admin" target="_blank">GitHub</a>
+        <a href="https://github.com/gugupy/fastify-admin/issues" target="_blank">Issues</a>
+        <a href="https://www.npmjs.com/package/fastify-admin" target="_blank">npm</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ── Theme ──────────────────────────────────────────────
+  const html = document.documentElement;
+  const buttons = document.querySelectorAll('.theme-btn');
+
+  function applyTheme(t) {
+    const dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    html.classList.toggle('dark', dark);
+    buttons.forEach(b => b.classList.toggle('active', b.dataset.theme === t));
+    try { localStorage.setItem('theme', t); } catch(e) {}
+  }
+
+  // Init from localStorage (matches the app's inline script)
+  const saved = (() => { try { return localStorage.getItem('theme'); } catch(e) { return null; } })();
+  applyTheme(saved || 'system');
+
+  buttons.forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.theme)));
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    const current = (() => { try { return localStorage.getItem('theme'); } catch(e) { return 'system'; } })();
+    if (current === 'system') applyTheme('system');
+  });
+
+  // ── Copy install ───────────────────────────────────────
+  function copyInstall(el) {
+    navigator.clipboard.writeText('npm install fastify-admin').then(() => {
+      const hint = document.getElementById('copyHint');
+      hint.textContent = 'copied!';
+      setTimeout(() => { hint.textContent = 'click to copy'; }, 2000);
+    });
+  }
+
+  // ── GSAP Animations ────────────────────────────────────
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Nav slide in
+  gsap.from('#nav', { y: -56, opacity: 0, duration: 0.5, ease: 'power2.out' });
+
+  // Hero entrance — staggered timeline
+  const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+  heroTl
+    .to('#heroBadge',   { opacity: 1, y: 0, duration: 0.5 }, 0.2)
+    .to('#heroTitle',   { opacity: 1, y: 0, duration: 0.6 }, 0.35)
+    .to('#heroSub',     { opacity: 1, y: 0, duration: 0.5 }, 0.55)
+    .to('#heroActions', { opacity: 1, y: 0, duration: 0.5 }, 0.7)
+    .to('#installBlock',{ opacity: 1, y: 0, duration: 0.5 }, 0.82);
+
+  // Set initial positions for hero elements
+  gsap.set(['#heroTitle', '#heroSub', '#heroActions', '#installBlock'], { y: 24 });
+
+  // Feature cards — stagger on scroll
+  gsap.to('.feature-card', {
+    opacity: 1, y: 0, duration: 0.5,
+    stagger: 0.07, ease: 'power2.out',
+    scrollTrigger: {
+      trigger: '.features-grid',
+      start: 'top 80%',
+    }
+  });
+
+  // Steps — slide in from left
+  gsap.to('.step', {
+    opacity: 1, x: 0, duration: 0.45,
+    stagger: 0.1, ease: 'power2.out',
+    scrollTrigger: {
+      trigger: '.steps',
+      start: 'top 80%',
+    }
+  });
+
+  // Roadmap — planned items
+  gsap.to('#roadmapPlanned .roadmap-item', {
+    opacity: 1, y: 0, duration: 0.5,
+    stagger: 0.07, ease: 'power2.out',
+    scrollTrigger: { trigger: '#roadmapPlanned', start: 'top 80%' }
+  });
+  // Roadmap — considering items
+  gsap.to('#roadmap .roadmap-grid--considering .roadmap-item', {
+    opacity: 1, y: 0, duration: 0.5,
+    stagger: 0.07, ease: 'power2.out',
+    scrollTrigger: { trigger: '.roadmap-grid--considering', start: 'top 80%' }
+  });
+
+  // Code block — fade up
+  gsap.to('#codeBlock', {
+    opacity: 1, y: 0, duration: 0.6, ease: 'power2.out',
+    scrollTrigger: {
+      trigger: '#codeBlock',
+      start: 'top 85%',
+    }
+  });
+
+  // Section nav — highlight active on scroll
+  const sectionNavLinks = document.querySelectorAll('.section-nav a');
+  const sectionIds = ['why', 'features', 'quickstart', 'roadmap', 'author'];
+  const sections = sectionIds.map(id => document.getElementById(id));
+
+  function setActive(id) {
+    sectionNavLinks.forEach(a => a.classList.remove('active'));
+    const active = document.querySelector(`.section-nav a[href="#${id}"]`);
+    if (active) active.classList.add('active');
+  }
+
+  // Use scroll position fallback for short sections like author
+  window.addEventListener('scroll', () => {
+    const scrollBottom = window.scrollY + window.innerHeight;
+    const docHeight = document.documentElement.scrollHeight;
+    if (scrollBottom >= docHeight - 40) { setActive('author'); return; }
+
+    let current = sectionIds[0];
+    sections.forEach((s, i) => {
+      if (s && s.getBoundingClientRect().top <= window.innerHeight * 0.45) {
+        current = sectionIds[i];
+      }
+    });
+    setActive(current);
+  }, { passive: true });
+</script>
+</body>
+</html>

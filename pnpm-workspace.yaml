@@ -1,0 +1,5 @@
+packages:
+  - "web"
+  - "fastify-admin"
+  - "types"
+  - "test-app"

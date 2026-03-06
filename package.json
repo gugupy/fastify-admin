@@ -1,0 +1,27 @@
+{
+  "name": "fastify-admin-monorepo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+      "dev:api": "pnpm --filter fastify-admin dev",
+      "dev:web": "pnpm --filter web dev",
+      "dev": "pnpm run dev:api & pnpm run dev:web",
+      "create-admin": "pnpm --filter fastify-admin create-admin",
+      "reset-password": "pnpm --filter fastify-admin reset-password",
+      "migration:create": "pnpm --filter fastify-admin migration:create",
+      "migration:up": "pnpm --filter fastify-admin migration:up",
+      "migration:down": "pnpm --filter fastify-admin migration:down",
+      "build:web": "pnpm --filter web build",
+      "build:package": "pnpm --filter fastify-admin build",
+      "bundle": "pnpm build:web && rm -rf fastify-admin/ui && cp -r web/dist fastify-admin/ui && pnpm build:package",
+      "release": "pnpm bundle && pnpm --filter fastify-admin publish --access public",
+      "dev:test": "pnpm --filter test-app dev",
+      "lint": "pnpm --filter fastify-admin lint && pnpm --filter web lint",
+      "format": "pnpm --filter fastify-admin format && pnpm --filter web format"
+    },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.20.0"
+}

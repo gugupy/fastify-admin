@@ -1,0 +1,89 @@
+{
+  "name": "fastify-admin",
+  "version": "0.1.0",
+  "description": "A self-hosted admin panel for Fastify + MikroORM",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "ui"
+  ],
+  "scripts": {
+    "dev": "node --env-file=.env --no-warnings=ExperimentalWarning --loader ts-node/esm --watch src/dev.ts",
+    "build": "tsc",
+    "create-admin": "node --env-file=.env --no-warnings=ExperimentalWarning --loader ts-node/esm src/cli/create-admin.ts",
+    "reset-password": "node --env-file=.env --no-warnings=ExperimentalWarning --loader ts-node/esm src/cli/reset-password.ts",
+    "migration:create": "mikro-orm-esm migration:create",
+    "migration:up": "mikro-orm-esm migration:up",
+    "migration:down": "mikro-orm-esm migration:down",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "keywords": [
+    "fastify",
+    "fastify-plugin",
+    "admin",
+    "admin-panel",
+    "mikro-orm",
+    "crud",
+    "rbac",
+    "authentication",
+    "dashboard",
+    "backoffice",
+    "typescript"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@fastify/cookie": ">=11",
+    "@fastify/jwt": ">=10",
+    "@fastify/oauth2": ">=8",
+    "@fastify/static": ">=9",
+    "@mikro-orm/core": ">=6",
+    "fastify": ">=5",
+    "fastify-plugin": ">=5"
+  },
+  "dependencies": {
+    "nodemailer": "^8.0.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/jwt": "^10.0.0",
+    "@fastify/oauth2": "^8.2.0",
+    "@fastify/static": "^9.0.0",
+    "@mikro-orm/cli": "^6.6.8",
+    "@mikro-orm/core": "^6.6.8",
+    "@mikro-orm/migrations": "^6.6.8",
+    "@mikro-orm/postgresql": "^6.6.8",
+    "@mikro-orm/reflection": "^6.6.8",
+    "@mikro-orm/seeder": "^6.6.8",
+    "@types/node": "^24.11.0",
+    "@types/nodemailer": "^7.0.11",
+    "@vitest/coverage-v8": "^4.0.18",
+    "eslint": "^9.39.1",
+    "fastify": "^5.7.4",
+    "fastify-plugin": "^5.1.0",
+    "prettier": "^3.8.1",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vitest": "^4.0.18"
+  },
+  "mikro-orm": {
+    "useTsNode": true,
+    "configPaths": [
+      "./src/mikro-orm.config.ts"
+    ]
+  }
+}
