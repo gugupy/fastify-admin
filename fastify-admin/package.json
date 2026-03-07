@@ -11,6 +11,9 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "fastify-admin": "./dist/cli/index.js"
+  },
   "files": [
     "dist",
     "ui"
@@ -18,13 +21,14 @@
   "scripts": {
     "dev": "node --env-file=.env --no-warnings=ExperimentalWarning --loader ts-node/esm --watch src/dev.ts",
     "build": "tsc",
-    "create-admin": "node --env-file=.env --no-warnings=ExperimentalWarning --loader ts-node/esm src/cli/create-admin.ts",
-    "reset-password": "node --env-file=.env --no-warnings=ExperimentalWarning --loader ts-node/esm src/cli/reset-password.ts",
+    "create-admin": "node --env-file=.env --no-warnings=ExperimentalWarning --loader ts-node/esm src/cli/index.ts create-admin",
+    "reset-password": "node --env-file=.env --no-warnings=ExperimentalWarning --loader ts-node/esm src/cli/index.ts reset-password",
     "migration:create": "mikro-orm-esm migration:create",
     "migration:up": "mikro-orm-esm migration:up",
     "migration:down": "mikro-orm-esm migration:down",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.ts\""
@@ -70,6 +74,7 @@
     "@types/node": "^24.11.0",
     "@types/nodemailer": "^7.0.11",
     "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/ui": "^4.0.18",
     "eslint": "^9.39.1",
     "fastify": "^5.7.4",
     "fastify-plugin": "^5.1.0",
