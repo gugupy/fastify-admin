@@ -82,11 +82,15 @@ const fastifyAdmin: FastifyPluginAsync<FastifyAdminOptions> = async (
 
   // ── RBAC seeding ──────────────────────────────────────────────────────────
 
-  await seedRbac(orm.em, registry)
+  await seedRbac(orm.em, registry, securityEntities)
 
   // ── Auth routes (public) ──────────────────────────────────────────────────
 
-  await registerAuthRoutes(app, orm.em, { signup, requireEmailVerification, emailEnabled })
+  await registerAuthRoutes(app, orm.em, {
+    signup,
+    requireEmailVerification,
+    emailEnabled,
+  })
   await registerOAuthRoutes(app, orm.em, appBaseUrl)
 
   // ── Admin config endpoint ─────────────────────────────────────────────────

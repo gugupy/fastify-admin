@@ -4,7 +4,24 @@ import fastifyOAuth2, { type OAuth2Namespace } from '@fastify/oauth2'
 import { User } from '../entities/user.entity.js'
 import { hashPassword, verifyPassword } from '../lib/password.js'
 import { sendMfaCode } from '../lib/mailer.js'
-import { loadPermissions, generateUsername } from '../lib/auth-utils.js'
+import {
+  loadPermissions,
+  hasPermission,
+  generateUsername,
+} from '../lib/auth-utils.js'
+import { Role } from '../entities/role.entity.js'
+
+async function assignViewerRole(em: EntityManager, user: User) {
+  const viewerRole = await em.findOne(
+    Role,
+    { name: 'Viewer' },
+    { populate: ['users'] },
+  )
+  if (viewerRole) {
+    viewerRole.users.add(user)
+    await em.flush()
+  }
+}
 
 declare module '@fastify/jwt' {
   interface FastifyJWT {
@@ -47,6 +64,7 @@ async function loginOrCreateOAuthUser(
       emailVerified: profile.emailVerified,
     })
     await fork.persist(user).flush()
+    await assignViewerRole(fork, user)
   }
 
   const token = app.jwt.sign({ sub: user.id, email: user.email })
@@ -58,7 +76,11 @@ async function loginOrCreateOAuthUser(
 export async function registerAuthRoutes(
   app: FastifyInstance,
   em: EntityManager,
-  opts: { signup: boolean; requireEmailVerification: boolean; emailEnabled: boolean } = {
+  opts: {
+    signup: boolean
+    requireEmailVerification: boolean
+    emailEnabled: boolean
+  } = {
     signup: true,
     requireEmailVerification: false,
     emailEnabled: false,
@@ -118,11 +140,13 @@ export async function registerAuthRoutes(
           user.mfaCode = await hashPassword(code)
           user.mfaCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000)
           await fork.persist(user).flush()
+          await assignViewerRole(fork, user)
           await sendMfaCode(email, code)
           return reply.send({ ok: true, requiresVerification: true })
         }
 
         await fork.persist(user).flush()
+        await assignViewerRole(fork, user)
       } catch (err: any) {
         if (err?.code === '23505') {
           const column = err?.detail?.match(/Key \((\w+)\)/)?.[1]
@@ -289,6 +313,9 @@ export async function registerAuthRoutes(
       const fork = em.fork()
       const user = await fork.findOne(User, { id: req.user.sub })
       if (!user) return reply.status(401).send({ message: 'Unauthenticated.' })
+      if (!(await hasPermission(fork, req.user.sub, 'profile.edit'))) {
+        return reply.status(403).send({ message: 'Permission denied.' })
+      }
       user.fullName = req.body.fullName ?? user.fullName
       user.bio = req.body.bio ?? user.bio
       await fork.flush()
@@ -307,6 +334,9 @@ export async function registerAuthRoutes(
       const fork = em.fork()
       const user = await fork.findOne(User, { id: req.user.sub })
       if (!user) return reply.status(401).send({ message: 'Unauthenticated.' })
+      if (!(await hasPermission(fork, req.user.sub, 'password.change'))) {
+        return reply.status(403).send({ message: 'Permission denied.' })
+      }
       if (user.password) {
         if (
           !req.body.currentPassword ||
@@ -334,8 +364,13 @@ export async function registerAuthRoutes(
       const fork = em.fork()
       const user = await fork.findOne(User, { id: req.user.sub })
       if (!user) return reply.status(401).send({ message: 'Unauthenticated.' })
+      if (!(await hasPermission(fork, req.user.sub, 'mfa.manage'))) {
+        return reply.status(403).send({ message: 'Permission denied.' })
+      }
       if (req.body.enabled && !opts.emailEnabled) {
-        return reply.status(400).send({ message: 'Email is not enabled on this server.' })
+        return reply
+          .status(400)
+          .send({ message: 'Email is not enabled on this server.' })
       }
       user.mfaEnabled = req.body.enabled
       if (!req.body.enabled) {

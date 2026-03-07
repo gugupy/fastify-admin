@@ -3,6 +3,8 @@ import { buildApp, teardown } from './setup.js'
 import { createHelpers } from './helpers.js'
 import { User, Role, Permission } from '../index.js'
 import { loadPermissions } from '../lib/auth-utils.js'
+import { WEB_PERMISSIONS } from '../seedRbac.js'
+import { hashPassword } from '../lib/password.js'
 
 vi.mock('../lib/mailer.js', () => ({ sendMfaCode: vi.fn() }))
 
@@ -22,7 +24,10 @@ beforeAll(async () => {
   const entities = Object.values(ctx.orm.getMetadata().getAll())
     .filter((meta) => !meta.pivotTable)
     .map((meta) => meta.collection)
-  allPermissions = entities.flatMap((e) => ACTIONS.map((a) => `${e}.${a}`))
+  allPermissions = [
+    ...entities.flatMap((e) => ACTIONS.map((a) => `${e}.${a}`)),
+    ...WEB_PERMISSIONS,
+  ]
 
   // Create admin user and assign Admin role
   await h.signup('adminuser', 'admin@example.com')
@@ -51,9 +56,15 @@ describe('loadPermissions', () => {
   })
 
   it('returns [] for a user with no roles', async () => {
-    await h.signup('noroles', 'noroles@example.com')
+    // Create directly via em to bypass the signup route (which assigns Viewer role)
     const em = ctx.orm.em.fork()
-    const user = await em.findOneOrFail(User, { email: 'noroles@example.com' })
+    const user = em.create(User, {
+      fullName: 'No Roles',
+      username: 'noroles',
+      email: 'noroles@example.com',
+      password: await hashPassword('password123'),
+    })
+    await em.persistAndFlush(user)
     const result = await loadPermissions(em, user.id)
     expect(result).toEqual([])
   })
@@ -101,7 +112,15 @@ describe('loadPermissions', () => {
 
 describe('GET /api/auth/me permissions', () => {
   it('returns empty permissions for a user with no roles', async () => {
-    await h.signup('noroleshttp', 'noroleshttp@example.com')
+    // Create directly via em to bypass the signup route (which assigns Viewer role)
+    const em = ctx.orm.em.fork()
+    const user = em.create(User, {
+      fullName: 'No Roles HTTP',
+      username: 'noroleshttp',
+      email: 'noroleshttp@example.com',
+      password: await hashPassword('password123'),
+    })
+    await em.persistAndFlush(user)
     const loginRes = await h.login('noroleshttp@example.com')
     const cookie = h.cookieFrom(loginRes)
 

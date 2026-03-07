@@ -55,7 +55,7 @@ function StatusBadge({ on }: { on: boolean }) {
 }
 
 export default function ProfilePage() {
-  const { refresh, user } = useRbac()
+  const { refresh, user, can } = useRbac()
 
   // Profile form
   const [fullName, setFullName] = useState(user?.fullName ?? '')
@@ -334,249 +334,263 @@ export default function ProfilePage() {
 
       <div className="border  bg-background px-6">
         {/* Profile info */}
-        <Section title="Personal information">
-          <form onSubmit={saveProfile} className="flex flex-col gap-4">
-            <Field>
-              <FieldLabel htmlFor="username">Username</FieldLabel>
-              <Input id="username" value={user.username} disabled />
-              <FieldDescription>Username cannot be changed.</FieldDescription>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="fullName">Full name</FieldLabel>
-              <Input
-                id="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="bio">Bio</FieldLabel>
-              <Input
-                id="bio"
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="A short bio…"
-              />
-            </Field>
-            {profileError && <FieldError>{profileError}</FieldError>}
-            <div className="flex items-center gap-3">
-              <Button type="submit" disabled={profileSaving}>
-                {profileSaving ? 'Saving…' : 'Save changes'}
-              </Button>
-              {profileSuccess && (
-                <span className="text-xs text-green-600">Saved!</span>
-              )}
-            </div>
-          </form>
-        </Section>
-
-        {/* Email */}
-        <Section
-          title="Email address"
-          description="Your email is used for login and notifications."
-        >
-          {emailOtpSent ? (
-            <>
-              <p className="text-sm text-muted-foreground">
-                We sent a 6-digit code to{' '}
-                <span className="text-foreground font-medium">{newEmail}</span>.
-                Enter it to confirm your new email.
-              </p>
-              <div className="flex gap-2" onPaste={handleEmailPaste}>
-                {emailDigits.map((d, i) => (
-                  <input
-                    key={i}
-                    ref={(el) => {
-                      emailInputRefs.current[i] = el
-                    }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={d}
-                    onChange={(e) => handleEmailDigitChange(i, e.target.value)}
-                    onKeyDown={(e) => handleEmailDigitKeyDown(i, e)}
-                    disabled={emailSaving}
-                    className="w-10 h-12 rounded-md border border-input bg-background text-center text-lg font-semibold focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring disabled:opacity-50"
-                  />
-                ))}
-              </div>
-              {emailError && <FieldError>{emailError}</FieldError>}
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  disabled={emailSaving || emailDigits.some((d) => !d)}
-                  onClick={() => submitEmailOtp(emailDigits.join(''))}
-                >
-                  {emailSaving ? 'Verifying…' : 'Confirm email'}
-                </Button>
-                <button
-                  type="button"
-                  className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-                  onClick={() => {
-                    setEmailOtpSent(false)
-                    setEmailDigits(Array(CODE_LENGTH).fill(''))
-                    setEmailError(null)
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col gap-4">
+        {can('profile.edit') && (
+          <Section title="Personal information">
+            <form onSubmit={saveProfile} className="flex flex-col gap-4">
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                />
+                <FieldLabel htmlFor="username">Username</FieldLabel>
+                <Input id="username" value={user.username} disabled />
+                <FieldDescription>Username cannot be changed.</FieldDescription>
               </Field>
-              {emailError && <FieldError>{emailError}</FieldError>}
-              <div>
-                <Button
-                  type="button"
-                  disabled={emailSaving || newEmail === user.email || !newEmail}
-                  onClick={requestEmailChange}
-                >
-                  {emailSaving ? 'Sending code…' : 'Update email'}
-                </Button>
-              </div>
-            </div>
-          )}
-        </Section>
-
-        {/* Password */}
-        <Section
-          title={user.hasPassword ? 'Change password' : 'Set a password'}
-          description={
-            user.oauthProvider && !user.hasPassword
-              ? `You signed in with ${user.oauthProvider}. Set a password to also enable email login.`
-              : undefined
-          }
-        >
-          <form onSubmit={savePassword} className="flex flex-col gap-4">
-            {user.hasPassword && (
               <Field>
-                <FieldLabel htmlFor="currentPassword">
-                  Current password
-                </FieldLabel>
+                <FieldLabel htmlFor="fullName">Full name</FieldLabel>
                 <Input
-                  id="currentPassword"
-                  type="password"
-                  autoComplete="current-password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  id="fullName"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   required
                 />
               </Field>
+              <Field>
+                <FieldLabel htmlFor="bio">Bio</FieldLabel>
+                <Input
+                  id="bio"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="A short bio…"
+                />
+              </Field>
+              {profileError && <FieldError>{profileError}</FieldError>}
+              <div className="flex items-center gap-3">
+                <Button type="submit" disabled={profileSaving}>
+                  {profileSaving ? 'Saving…' : 'Save changes'}
+                </Button>
+                {profileSuccess && (
+                  <span className="text-xs text-green-600">Saved!</span>
+                )}
+              </div>
+            </form>
+          </Section>
+        )}
+
+        {/* Email */}
+        {can('profile.email') && (
+          <Section
+            title="Email address"
+            description="Your email is used for login and notifications."
+          >
+            {emailOtpSent ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  We sent a 6-digit code to{' '}
+                  <span className="text-foreground font-medium">
+                    {newEmail}
+                  </span>
+                  . Enter it to confirm your new email.
+                </p>
+                <div className="flex gap-2" onPaste={handleEmailPaste}>
+                  {emailDigits.map((d, i) => (
+                    <input
+                      key={i}
+                      ref={(el) => {
+                        emailInputRefs.current[i] = el
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={d}
+                      onChange={(e) =>
+                        handleEmailDigitChange(i, e.target.value)
+                      }
+                      onKeyDown={(e) => handleEmailDigitKeyDown(i, e)}
+                      disabled={emailSaving}
+                      className="w-10 h-12 rounded-md border border-input bg-background text-center text-lg font-semibold focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring disabled:opacity-50"
+                    />
+                  ))}
+                </div>
+                {emailError && <FieldError>{emailError}</FieldError>}
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    disabled={emailSaving || emailDigits.some((d) => !d)}
+                    onClick={() => submitEmailOtp(emailDigits.join(''))}
+                  >
+                    {emailSaving ? 'Verifying…' : 'Confirm email'}
+                  </Button>
+                  <button
+                    type="button"
+                    className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                    onClick={() => {
+                      setEmailOtpSent(false)
+                      setEmailDigits(Array(CODE_LENGTH).fill(''))
+                      setEmailError(null)
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <Field>
+                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                  />
+                </Field>
+                {emailError && <FieldError>{emailError}</FieldError>}
+                <div>
+                  <Button
+                    type="button"
+                    disabled={
+                      emailSaving || newEmail === user.email || !newEmail
+                    }
+                    onClick={requestEmailChange}
+                  >
+                    {emailSaving ? 'Sending code…' : 'Update email'}
+                  </Button>
+                </div>
+              </div>
             )}
-            <Field>
-              <FieldLabel htmlFor="newPassword">New password</FieldLabel>
-              <Input
-                id="newPassword"
-                type="password"
-                autoComplete="new-password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-              />
-            </Field>
-            {passwordError && <FieldError>{passwordError}</FieldError>}
-            <div className="flex items-center gap-3">
-              <Button type="submit" disabled={passwordSaving}>
-                {passwordSaving
-                  ? 'Saving…'
-                  : user.hasPassword
-                    ? 'Update password'
-                    : 'Set password'}
-              </Button>
-              {passwordSuccess && (
-                <span className="text-xs text-green-600">
-                  Password updated!
-                </span>
+          </Section>
+        )}
+
+        {/* Password */}
+        {can('password.change') && (
+          <Section
+            title={user.hasPassword ? 'Change password' : 'Set a password'}
+            description={
+              user.oauthProvider && !user.hasPassword
+                ? `You signed in with ${user.oauthProvider}. Set a password to also enable email login.`
+                : undefined
+            }
+          >
+            <form onSubmit={savePassword} className="flex flex-col gap-4">
+              {user.hasPassword && (
+                <Field>
+                  <FieldLabel htmlFor="currentPassword">
+                    Current password
+                  </FieldLabel>
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    autoComplete="current-password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                  />
+                </Field>
               )}
-            </div>
-          </form>
-        </Section>
+              <Field>
+                <FieldLabel htmlFor="newPassword">New password</FieldLabel>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                />
+              </Field>
+              {passwordError && <FieldError>{passwordError}</FieldError>}
+              <div className="flex items-center gap-3">
+                <Button type="submit" disabled={passwordSaving}>
+                  {passwordSaving
+                    ? 'Saving…'
+                    : user.hasPassword
+                      ? 'Update password'
+                      : 'Set password'}
+                </Button>
+                {passwordSuccess && (
+                  <span className="text-xs text-green-600">
+                    Password updated!
+                  </span>
+                )}
+              </div>
+            </form>
+          </Section>
+        )}
 
         {/* MFA */}
-        {getAdmin().emailEnabled && <Section
-          title="Two-factor authentication"
-          description="Add an extra layer of security. A 6-digit code will be emailed to you each time you sign in."
-        >
-          {mfaOtpSent ? (
-            <>
-              <p className="text-sm text-muted-foreground">
-                We sent a 6-digit code to{' '}
-                <span className="text-foreground font-medium">
-                  {user.email}
-                </span>
-                . Enter it to activate two-factor authentication.
-              </p>
-              <div className="flex gap-2" onPaste={handleMfaPaste}>
-                {mfaDigits.map((d, i) => (
-                  <input
-                    key={i}
-                    ref={(el) => {
-                      mfaInputRefs.current[i] = el
-                    }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={d}
-                    onChange={(e) => handleMfaDigitChange(i, e.target.value)}
-                    onKeyDown={(e) => handleMfaDigitKeyDown(i, e)}
-                    disabled={mfaSaving}
-                    className="w-10 h-12 rounded-md border border-input bg-background text-center text-lg font-semibold focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring disabled:opacity-50"
-                  />
-                ))}
-              </div>
-              {mfaError && <FieldError>{mfaError}</FieldError>}
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  disabled={mfaSaving || mfaDigits.some((d) => !d)}
-                  onClick={() => submitMfaOtp(mfaDigits.join(''))}
-                >
-                  {mfaSaving ? 'Verifying…' : 'Confirm & enable'}
-                </Button>
-                <button
-                  type="button"
-                  className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-                  onClick={() => {
-                    setMfaOtpSent(false)
-                    setMfaDigits(Array(CODE_LENGTH).fill(''))
-                    setMfaError(null)
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm font-medium">
-                    Email verification code
+        {getAdmin().emailEnabled && can('mfa.manage') && (
+          <Section
+            title="Two-factor authentication"
+            description="Add an extra layer of security. A 6-digit code will be emailed to you each time you sign in."
+          >
+            {mfaOtpSent ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  We sent a 6-digit code to{' '}
+                  <span className="text-foreground font-medium">
+                    {user.email}
                   </span>
-                  <StatusBadge on={user.mfaEnabled} />
+                  . Enter it to activate two-factor authentication.
+                </p>
+                <div className="flex gap-2" onPaste={handleMfaPaste}>
+                  {mfaDigits.map((d, i) => (
+                    <input
+                      key={i}
+                      ref={(el) => {
+                        mfaInputRefs.current[i] = el
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={d}
+                      onChange={(e) => handleMfaDigitChange(i, e.target.value)}
+                      onKeyDown={(e) => handleMfaDigitKeyDown(i, e)}
+                      disabled={mfaSaving}
+                      className="w-10 h-12 rounded-md border border-input bg-background text-center text-lg font-semibold focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring disabled:opacity-50"
+                    />
+                  ))}
                 </div>
-                <Button
-                  variant={user.mfaEnabled ? 'outline' : 'default'}
-                  onClick={toggleMfa}
-                  disabled={mfaSaving}
-                >
-                  {mfaSaving ? '…' : user.mfaEnabled ? 'Disable' : 'Enable'}
-                </Button>
-              </div>
-              {mfaError && <FieldError>{mfaError}</FieldError>}
-            </>
-          )}
-        </Section>}
+                {mfaError && <FieldError>{mfaError}</FieldError>}
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    disabled={mfaSaving || mfaDigits.some((d) => !d)}
+                    onClick={() => submitMfaOtp(mfaDigits.join(''))}
+                  >
+                    {mfaSaving ? 'Verifying…' : 'Confirm & enable'}
+                  </Button>
+                  <button
+                    type="button"
+                    className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                    onClick={() => {
+                      setMfaOtpSent(false)
+                      setMfaDigits(Array(CODE_LENGTH).fill(''))
+                      setMfaError(null)
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-medium">
+                      Email verification code
+                    </span>
+                    <StatusBadge on={user.mfaEnabled} />
+                  </div>
+                  <Button
+                    variant={user.mfaEnabled ? 'outline' : 'default'}
+                    onClick={toggleMfa}
+                    disabled={mfaSaving}
+                  >
+                    {mfaSaving ? '…' : user.mfaEnabled ? 'Disable' : 'Enable'}
+                  </Button>
+                </div>
+                {mfaError && <FieldError>{mfaError}</FieldError>}
+              </>
+            )}
+          </Section>
+        )}
       </div>
     </div>
   )
