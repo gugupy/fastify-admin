@@ -4,7 +4,12 @@ import { TsMorphMetadataProvider } from '@mikro-orm/reflection'
 import { User, Role, Permission } from '../index.js'
 import { createAdminPlugin } from '../plugin.js'
 
-export async function buildApp() {
+export async function buildApp(
+  opts: {
+    requireEmailVerification?: boolean
+    resources?: Record<string, any>
+  } = {},
+) {
   const orm = await MikroORM.init({
     entities: [User, Role, Permission],
     dbName: process.env.TEST_DB_NAME ?? 'fastifyadmin_test',
@@ -23,7 +28,8 @@ export async function buildApp() {
     orm,
     name: 'Test Admin',
     signup: true,
-    requireEmailVerification: false,
+    requireEmailVerification: opts.requireEmailVerification ?? false,
+    resources: opts.resources ?? {},
   })
 
   await app.ready()
