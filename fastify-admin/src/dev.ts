@@ -22,7 +22,7 @@ const app = fastify({ logger: { level: 'info' } })
 
 await app.register(fastifyAdmin, {
   orm,
-  requireEmailVerification: true,
+  requireEmailVerification: false,
   resources: {
     user: {
       sidebar: false,

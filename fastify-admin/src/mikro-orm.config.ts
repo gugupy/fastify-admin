@@ -5,11 +5,15 @@ import { SeedManager } from '@mikro-orm/seeder'
 
 export default defineConfig({
   extensions: [Migrator, SeedManager],
-  dbName: process.env.DB_NAME ?? 'fastifyadmin',
-  host: process.env.DB_HOST ?? 'localhost',
-  port: parseInt(process.env.DB_PORT ?? '5432'),
-  user: process.env.DB_USER ?? 'postgres',
-  password: process.env.DB_PASSWORD ?? 'password',
+  ...(process.env.DATABASE_URL
+    ? { clientUrl: process.env.DATABASE_URL }
+    : {
+        dbName: process.env.DB_NAME ?? 'fastifyadmin',
+        host: process.env.DB_HOST ?? 'localhost',
+        port: parseInt(process.env.DB_PORT ?? '5432'),
+        user: process.env.DB_USER ?? 'postgres',
+        password: process.env.DB_PASSWORD ?? 'password',
+      }),
   entities: ['dist/**/*.entity.js'],
   entitiesTs: ['src/**/*.entity.ts'],
   metadataProvider: TsMorphMetadataProvider,

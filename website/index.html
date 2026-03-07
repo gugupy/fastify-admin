@@ -663,10 +663,6 @@
     <div class="roadmap-group-label">Planned</div>
     <div class="roadmap-grid" id="roadmapPlanned">
       <div class="roadmap-item">
-        <h3>Test coverage</h3>
-        <p>Full test suite using Vitest and Testing Library — unit tests for backend utilities, integration tests for API routes and RBAC enforcement, and component tests for the UI.</p>
-      </div>
-      <div class="roadmap-item">
         <h3>Documentation site</h3>
         <p>Dedicated docs site with guides, API reference, configuration options, and recipes for common patterns.</p>
       </div>
@@ -689,6 +685,10 @@
       <div class="roadmap-item">
         <h3>Internationalisation (i18n)</h3>
         <p>Full UI localisation with pluggable locale files. Translate labels, messages, and validation errors into any language.</p>
+      </div>
+      <div class="roadmap-item">
+        <h3>Rate limiting</h3>
+        <p>Built-in rate limiting on auth endpoints — login, signup, MFA, and password reset — to prevent brute-force attacks. Configurable limits via plugin options, powered by <code>@fastify/rate-limit</code>.</p>
       </div>
     </div>
 
