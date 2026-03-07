@@ -71,12 +71,15 @@ export async function seedRbac(
     await fork.flush()
   }
 
-  // ── Demo role: all entity permissions, no web permissions ───────────────────
+  // ── Demo role: full CRUD on non-security entities, read-only on security entities, no web perms ──
   const demoRole = await ensureRole(fork, 'Demo')
   const demoHas = new Set(demoRole.permissions.getItems().map((p) => p.name))
-  const demoToAdd = allPerms.filter(
-    (p) => entityPermSet.has(p.name) && !demoHas.has(p.name),
-  )
+  const demoToAdd = allPerms.filter((p) => {
+    if (!entityPermSet.has(p.name) || demoHas.has(p.name)) return false
+    const [entity, action] = p.name.split('.')
+    if (securityEntitySet.has(entity)) return VIEWER_ACTIONS.has(action)
+    return true
+  })
   if (demoToAdd.length) {
     for (const p of demoToAdd) demoRole.permissions.add(p)
     await fork.flush()
