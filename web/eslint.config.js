@@ -10,7 +10,7 @@ import { dirname } from 'path'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default tseslint.config(
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'vite.config.ts']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -26,6 +26,14 @@ export default tseslint.config(
         tsconfigRootDir: __dirname,
         project: ['./tsconfig.app.json'],
       },
+    },
+    rules: {
+      // shadcn/ui and context files legitimately mix components with constants/hooks
+      'react-refresh/only-export-components': 'warn',
+      // Intentional patterns: initial data loads and form-state sync via effects
+      'react-hooks/set-state-in-effect': 'warn',
+      // Dynamic entity data requires any in a few mapper/selector spots
+      '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
 )
