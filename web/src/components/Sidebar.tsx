@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/tooltip'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { DatabaseLightningIcon, SecurityIcon } from '@hugeicons/core-free-icons'
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { Avatar, AvatarFallback } from './ui/avatar'
 
 const DefaultEntityIcon = <HugeiconsIcon icon={DatabaseLightningIcon} />
 
@@ -404,10 +404,6 @@ export function Sidebar() {
                   ].join(' ')}
                 >
                   <Avatar className="after:rounded-none rounded-none">
-                    <AvatarImage
-                      className="after:rounded-none rounded-none"
-                      src="https://github.com/gugupy.png"
-                    />
                     <AvatarFallback>{initials}</AvatarFallback>
                   </Avatar>
 
