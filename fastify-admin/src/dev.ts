@@ -22,8 +22,7 @@ const app = fastify({ logger: { level: 'info' } })
 
 await app.register(createAdminPlugin, {
   orm,
-  name: process.env.ADMIN_NAME ?? 'FastifyAdmin',
-  signup: process.env.SIGNUP_ENABLED !== 'false',
+  requireEmailVerification: true,
   resources: {
     user: {
       sidebar: false,

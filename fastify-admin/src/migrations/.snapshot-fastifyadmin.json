@@ -473,6 +473,22 @@
           "unique": false,
           "enumItems": [],
           "mappedType": "text"
+        },
+        "email_verified": {
+          "name": "email_verified",
+          "type": "bool",
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "nullable": false,
+          "default": "false",
+          "unsigned": false,
+          "autoincrement": false,
+          "comment": null,
+          "primary": false,
+          "unique": false,
+          "enumItems": [],
+          "mappedType": "boolean"
         }
       },
       "name": "user",

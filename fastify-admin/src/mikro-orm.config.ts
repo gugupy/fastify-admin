@@ -1,7 +1,7 @@
-import { defineConfig } from '@mikro-orm/postgresql';
-import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
-import { Migrator } from '@mikro-orm/migrations';
-import { SeedManager } from '@mikro-orm/seeder';
+import { defineConfig } from '@mikro-orm/postgresql'
+import { TsMorphMetadataProvider } from '@mikro-orm/reflection'
+import { Migrator } from '@mikro-orm/migrations'
+import { SeedManager } from '@mikro-orm/seeder'
 
 export default defineConfig({
   extensions: [Migrator, SeedManager],
@@ -22,4 +22,4 @@ export default defineConfig({
     pathTs: 'src/seeders',
   },
   debug: process.env.NODE_ENV !== 'production',
-});
+})

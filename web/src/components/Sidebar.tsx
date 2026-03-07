@@ -1,38 +1,35 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { ThemeToggle } from "./ThemeToggle";
-import { useRbac } from "../lib/rbac";
-import { entityRegistry, perm } from "../lib/entityRegistry";
-import type { EntityMeta } from "../types/entity";
-import { FastifyAdminIcon } from "./icons";
-import { getAdmin } from "../lib/FastifyAdmin";
+import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { ThemeToggle } from './ThemeToggle'
+import { useRbac } from '../lib/rbac'
+import { entityRegistry, perm } from '../lib/entityRegistry'
+import type { EntityMeta } from '../types/entity'
+import { FastifyAdminIcon } from './icons'
+import { getAdmin } from '../lib/FastifyAdmin'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu'
 import {
   Collapsible,
   CollapsibleTrigger,
   CollapsibleContent,
-} from "@/components/ui/collapsible";
+} from '@/components/ui/collapsible'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  DatabaseLightningIcon,
-  SecurityIcon,
-} from "@hugeicons/core-free-icons";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+} from '@/components/ui/tooltip'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { DatabaseLightningIcon, SecurityIcon } from '@hugeicons/core-free-icons'
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 
-const DefaultEntityIcon = <HugeiconsIcon icon={DatabaseLightningIcon} />;
+const DefaultEntityIcon = <HugeiconsIcon icon={DatabaseLightningIcon} />
 
 function ChevronIcon({ open }: { open: boolean }) {
   return (
@@ -42,7 +39,7 @@ function ChevronIcon({ open }: { open: boolean }) {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+      className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
     >
       <path
         d="M6 9l6 6 6-6"
@@ -52,7 +49,7 @@ function ChevronIcon({ open }: { open: boolean }) {
         strokeLinejoin="round"
       />
     </svg>
-  );
+  )
 }
 
 function PanelCollapseIcon({ collapsed }: { collapsed: boolean }) {
@@ -63,7 +60,7 @@ function PanelCollapseIcon({ collapsed }: { collapsed: boolean }) {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={`transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`}
+      className={`transition-transform duration-200 ${collapsed ? 'rotate-180' : ''}`}
     >
       <rect
         x="3"
@@ -83,56 +80,56 @@ function PanelCollapseIcon({ collapsed }: { collapsed: boolean }) {
         strokeLinejoin="round"
       />
     </svg>
-  );
+  )
 }
 
 function capitalize(str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 type NavItem = {
-  entity: EntityMeta;
-  config: ReturnType<typeof entityRegistry.get>;
-};
+  entity: EntityMeta
+  config: ReturnType<typeof entityRegistry.get>
+}
 
 function SystemFlyout({
   items,
   pathname,
 }: {
-  items: NavItem[];
-  pathname: string;
+  items: NavItem[]
+  pathname: string
 }) {
-  const [open, setOpen] = useState(false);
-  const [top, setTop] = useState(0);
-  const triggerRef = useRef<HTMLDivElement>(null);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [open, setOpen] = useState(false)
+  const [top, setTop] = useState(0)
+  const triggerRef = useRef<HTMLDivElement>(null)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const isActive = items.some(
     ({ entity }) =>
       pathname.startsWith(`/${entity.name}/`) || pathname === `/${entity.name}`,
-  );
+  )
 
   function scheduleClose() {
-    closeTimer.current = setTimeout(() => setOpen(false), 100);
+    closeTimer.current = setTimeout(() => setOpen(false), 100)
   }
 
   function cancelClose() {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
+    if (closeTimer.current) clearTimeout(closeTimer.current)
   }
 
   function handleMouseEnter() {
-    cancelClose();
+    cancelClose()
     if (triggerRef.current) {
-      setTop(triggerRef.current.getBoundingClientRect().top);
+      setTop(triggerRef.current.getBoundingClientRect().top)
     }
-    setOpen(true);
+    setOpen(true)
   }
 
   const flyout =
     open &&
     createPortal(
       <div
-        style={{ position: "fixed", top, left: 56 + 8 }}
+        style={{ position: 'fixed', top, left: 56 + 8 }}
         className="z-50 min-w-44 border bg-background shadow-md py-1"
         onMouseEnter={cancelClose}
         onMouseLeave={scheduleClose}
@@ -143,20 +140,20 @@ function SystemFlyout({
         {items.map(({ entity, config }) => {
           const active =
             pathname.startsWith(`/${entity.name}/`) ||
-            pathname === `/${entity.name}`;
-          const Icon = config.icon;
-          const label = config.label ?? capitalize(entity.name);
+            pathname === `/${entity.name}`
+          const Icon = config.icon
+          const label = config.label ?? capitalize(entity.name)
           return (
             <Link
               key={entity.name}
               to="/$model/list"
               params={{ model: entity.name }}
               className={[
-                "flex items-center gap-2 px-3 py-1.5 text-sm transition-colors",
+                'flex items-center gap-2 px-3 py-1.5 text-sm transition-colors',
                 active
-                  ? "bg-muted font-medium text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-              ].join(" ")}
+                  ? 'bg-muted font-medium text-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+              ].join(' ')}
             >
               <span className="shrink-0 opacity-70">
                 {Icon ? (
@@ -167,11 +164,11 @@ function SystemFlyout({
               </span>
               {label}
             </Link>
-          );
+          )
         })}
       </div>,
       document.body,
-    );
+    )
 
   return (
     <div
@@ -182,18 +179,18 @@ function SystemFlyout({
     >
       <button
         className={[
-          "w-9 h-9 flex items-center justify-center transition-colors",
+          'w-9 h-9 flex items-center justify-center transition-colors',
           isActive
-            ? "bg-muted text-foreground"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-        ].join(" ")}
+            ? 'bg-muted text-foreground'
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+        ].join(' ')}
         aria-label="Security"
       >
         <HugeiconsIcon size={14} icon={SecurityIcon} />
       </button>
       {flyout}
     </div>
-  );
+  )
 }
 
 function NavLink({
@@ -203,17 +200,17 @@ function NavLink({
   collapsed,
 }: NavItem & { pathname: string; collapsed: boolean }) {
   const active =
-    pathname.startsWith(`/${entity.name}/`) || pathname === `/${entity.name}`;
-  const Icon = config.icon;
-  const label = config.label ?? capitalize(entity.name);
+    pathname.startsWith(`/${entity.name}/`) || pathname === `/${entity.name}`
+  const Icon = config.icon
+  const label = config.label ?? capitalize(entity.name)
 
   const linkClass = [
-    "flex items-center  text-sm transition-colors",
-    collapsed ? "justify-center w-9 h-9 mx-auto" : "gap-2 px-2 py-1.5",
+    'flex items-center  text-sm transition-colors',
+    collapsed ? 'justify-center w-9 h-9 mx-auto' : 'gap-2 px-2 py-1.5',
     active
-      ? "bg-muted font-medium text-foreground"
-      : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-  ].join(" ");
+      ? 'bg-muted font-medium text-foreground'
+      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+  ].join(' ')
 
   const inner = (
     <Link
@@ -226,97 +223,97 @@ function NavLink({
       </span>
       {!collapsed && label}
     </Link>
-  );
+  )
 
-  if (!collapsed) return inner;
+  if (!collapsed) return inner
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>{inner}</TooltipTrigger>
       <TooltipContent side="right">{label}</TooltipContent>
     </Tooltip>
-  );
+  )
 }
 
 export function Sidebar() {
-  const { user, can } = useRbac();
-  const admin = getAdmin();
-  const AppIcon = admin.icon;
-  const navigate = useNavigate();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [entities, setEntities] = useState<EntityMeta[]>([]);
-  const [systemOpen, setSystemOpen] = useState(false);
+  const { user, can } = useRbac()
+  const admin = getAdmin()
+  const AppIcon = admin.icon
+  const navigate = useNavigate()
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const [entities, setEntities] = useState<EntityMeta[]>([])
+  const [systemOpen, setSystemOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(() => {
     try {
-      return localStorage.getItem("sidebar-collapsed") === "true";
+      return localStorage.getItem('sidebar-collapsed') === 'true'
     } catch {
-      return false;
+      return false
     }
-  });
+  })
 
   useEffect(() => {
-    fetch("/api/entities")
+    fetch('/api/entities')
       .then((r) => r.json())
       .then(setEntities)
-      .catch(() => {});
-  }, []);
+      .catch(() => {})
+  }, [])
 
   function toggleCollapsed() {
     setCollapsed((v) => {
-      const next = !v;
+      const next = !v
       try {
-        localStorage.setItem("sidebar-collapsed", String(next));
+        localStorage.setItem('sidebar-collapsed', String(next))
       } catch {
         /* */
       }
-      return next;
-    });
+      return next
+    })
   }
 
   //
   const initials = (() => {
-    const name = user?.fullName?.trim();
-    if (!name) return "?";
-    const parts = name.split(/\s+/).filter(Boolean);
+    const name = user?.fullName?.trim()
+    if (!name) return '?'
+    const parts = name.split(/\s+/).filter(Boolean)
     if (parts.length >= 2) {
-      const first = parts[0].charAt(0) || "";
-      const second = parts[1].charAt(0) || "";
-      const combined = (first + second).toUpperCase();
-      return combined || "?";
+      const first = parts[0].charAt(0) || ''
+      const second = parts[1].charAt(0) || ''
+      const combined = (first + second).toUpperCase()
+      return combined || '?'
     }
-    return name.slice(0, 2).toUpperCase();
-  })();
+    return name.slice(0, 2).toUpperCase()
+  })()
 
   const enriched = entities.map((entity) => ({
     entity,
     config: entityRegistry.get(entity.name),
-  }));
+  }))
 
   const navItems = enriched.filter(
     ({ entity, config }) =>
-      config.sidebar !== false && can(perm(config, entity.name, "list")),
-  );
+      config.sidebar !== false && can(perm(config, entity.name, 'list')),
+  )
 
   const systemItems = enriched.filter(
     ({ entity, config }) =>
       admin.securityEntities.includes(entity.name) &&
-      can(perm(config, entity.name, "list")),
-  );
+      can(perm(config, entity.name, 'list')),
+  )
 
   // Auto-open if a system entity is currently active
   const systemActive = systemItems.some(
     ({ entity }) =>
       pathname.startsWith(`/${entity.name}/`) || pathname === `/${entity.name}`,
-  );
+  )
 
   return (
     <TooltipProvider delayDuration={100}>
       <div className="relative shrink-0">
         <aside
           className={[
-            "flex flex-col h-screen border-r bg-background transition-[width] duration-200 overflow-hidden",
-            collapsed ? "w-14" : "w-56",
-          ].join(" ")}
+            'flex flex-col h-screen border-r bg-background transition-[width] duration-200 overflow-hidden',
+            collapsed ? 'w-14' : 'w-56',
+          ].join(' ')}
         >
           {/* Logo */}
           <div className="px-3 py-3.5 border-b flex items-center gap-2.5 shrink-0">
@@ -402,9 +399,9 @@ export function Sidebar() {
               <DropdownMenuTrigger asChild>
                 <button
                   className={[
-                    "w-full flex items-center  transition-colors hover:bg-muted/50 outline-none",
-                    collapsed ? "justify-center p-1" : "gap-2 px-1 py-1",
-                  ].join(" ")}
+                    'w-full flex items-center  transition-colors hover:bg-muted/50 outline-none',
+                    collapsed ? 'justify-center p-1' : 'gap-2 px-1 py-1',
+                  ].join(' ')}
                 >
                   <Avatar className="after:rounded-none rounded-none">
                     <AvatarImage
@@ -428,7 +425,7 @@ export function Sidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 side="top"
-                align={collapsed ? "center" : "start"}
+                align={collapsed ? 'center' : 'start'}
                 className="w-48 mb-1 ml-5"
               >
                 <div className="py-3">
@@ -438,7 +435,7 @@ export function Sidebar() {
                   </span>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+                <DropdownMenuItem onClick={() => navigate({ to: '/profile' })}>
                   Profile &amp; settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -449,7 +446,7 @@ export function Sidebar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
-                  onClick={() => navigate({ to: "/logout" })}
+                  onClick={() => navigate({ to: '/logout' })}
                 >
                   Sign out
                 </DropdownMenuItem>
@@ -463,17 +460,17 @@ export function Sidebar() {
           <TooltipTrigger asChild>
             <button
               onClick={toggleCollapsed}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               className="absolute top-11 -right-3 z-10 w-6 h-6  border bg-background shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
             >
               <PanelCollapseIcon collapsed={collapsed} />
             </button>
           </TooltipTrigger>
           <TooltipContent side="right">
-            {collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            {collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           </TooltipContent>
         </Tooltip>
       </div>
     </TooltipProvider>
-  );
+  )
 }

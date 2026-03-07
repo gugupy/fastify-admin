@@ -1,95 +1,95 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { FieldInput, isEditableField } from "../../../lib/entityFieldMapper";
-import { entityRegistry, perm } from "../../../lib/entityRegistry";
-import { useRbac } from "../../../lib/rbac";
-import { Label } from "@/components/ui/label";
-import { RelationMultiSelect } from "../../../components/RelationMultiSelect";
-import type { EntityMeta } from "../../../types/entity";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
+import { FieldInput, isEditableField } from '../../../lib/entityFieldMapper'
+import { entityRegistry, perm } from '../../../lib/entityRegistry'
+import { useRbac } from '../../../lib/rbac'
+import { Label } from '@/components/ui/label'
+import { RelationMultiSelect } from '../../../components/RelationMultiSelect'
+import type { EntityMeta } from '../../../types/entity'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
 
-export const Route = createFileRoute("/$model/$id/edit")({
+export const Route = createFileRoute('/$model/$id/edit')({
   loader: async ({ params }) => {
-    const entitiesRes = await fetch("/api/entities");
-    const entities: EntityMeta[] = await entitiesRes.json();
-    const entity = entities.find((e) => e.name === params.model);
+    const entitiesRes = await fetch('/api/entities')
+    const entities: EntityMeta[] = await entitiesRes.json()
+    const entity = entities.find((e) => e.name === params.model)
 
-    let record: Record<string, unknown> = {};
-    if (params.id !== "new") {
-      const recordRes = await fetch(`/api/${params.model}/${params.id}`);
-      record = await recordRes.json();
+    let record: Record<string, unknown> = {}
+    if (params.id !== 'new') {
+      const recordRes = await fetch(`/api/${params.model}/${params.id}`)
+      record = await recordRes.json()
     }
 
-    return { entity, record };
+    return { entity, record }
   },
   component: EditComponent,
-});
+})
 
 function EditComponent() {
-  const { model, id } = Route.useParams();
-  const { entity, record } = Route.useLoaderData();
-  const navigate = useNavigate();
-  const config = entityRegistry.get(model);
-  const { can } = useRbac();
-  const isNew = id === "new";
-  const requiredPerm = perm(config, model, isNew ? "create" : "edit");
+  const { model, id } = Route.useParams()
+  const { entity, record } = Route.useLoaderData()
+  const navigate = useNavigate()
+  const config = entityRegistry.get(model)
+  const { can } = useRbac()
+  const isNew = id === 'new'
+  const requiredPerm = perm(config, model, isNew ? 'create' : 'edit')
 
-  const [form, setForm] = useState<Record<string, unknown>>(record);
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<Record<string, unknown>>(record)
+  const [error, setError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
 
   if (!can(requiredPerm)) {
     return (
       <div className="p-6 text-red-500">
-        You don't have permission to {isNew ? "create" : "edit"} {model}{" "}
+        You don't have permission to {isNew ? 'create' : 'edit'} {model}{' '}
         records.
       </div>
-    );
+    )
   }
 
   if (!entity) {
-    return <div className="p-6 text-red-500">Entity "{model}" not found.</div>;
+    return <div className="p-6 text-red-500">Entity "{model}" not found.</div>
   }
 
   if (config.edit?.component) {
-    const Custom = config.edit.component;
-    return <Custom model={model} id={id} entity={entity} record={record} />;
+    const Custom = config.edit.component
+    return <Custom model={model} id={id} entity={entity} record={record} />
   }
 
-  const editConfig = config.edit ?? {};
-  const allEditable = entity.fields.filter(isEditableField);
+  const editConfig = config.edit ?? {}
+  const allEditable = entity.fields.filter(isEditableField)
   // If fields are explicitly listed, include them even if they're relations (not primitive)
   const editableFields = editConfig.fields
     ? (editConfig.fields
         .map((name) => entity.fields.find((f) => f.name === name))
         .filter(Boolean) as typeof allEditable)
-    : allEditable;
+    : allEditable
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    setError(null);
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
 
     const res = await fetch(isNew ? `/api/${model}` : `/api/${model}/${id}`, {
-      method: isNew ? "POST" : "PUT",
-      headers: { "Content-Type": "application/json" },
+      method: isNew ? 'POST' : 'PUT',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
-    });
+    })
 
-    setSaving(false);
+    setSaving(false)
 
     if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      setError(body.message ?? "Something went wrong.");
-      return;
+      const body = await res.json().catch(() => ({}))
+      setError(body.message ?? 'Something went wrong.')
+      return
     }
 
-    navigate({ to: "/$model/list", params: { model } });
+    navigate({ to: '/$model/list', params: { model } })
   }
 
   function set(name: string, value: unknown) {
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }))
   }
 
   return (
@@ -103,7 +103,7 @@ function EditComponent() {
         </Link>
         <span className="text-muted-foreground">/</span>
         <h1 className="text-xl font-semibold">
-          {isNew ? "New" : `Edit #${id}`}
+          {isNew ? 'New' : `Edit #${id}`}
         </h1>
       </div>
 
@@ -115,10 +115,10 @@ function EditComponent() {
             </Label>
             <div className="flex-1">
               {(() => {
-                const val = form[field.name] ?? "";
-                const onChg = (v: unknown) => set(field.name, v);
-                const custom = editConfig.renderInput?.(field, val, onChg);
-                if (custom) return custom;
+                const val = form[field.name] ?? ''
+                const onChg = (v: unknown) => set(field.name, v)
+                const custom = editConfig.renderInput?.(field, val, onChg)
+                if (custom) return custom
                 // Auto-use RelationMultiSelect for non-primitive (relation) fields
                 if (!isEditableField(field)) {
                   return (
@@ -127,11 +127,9 @@ function EditComponent() {
                       value={val}
                       onChange={onChg}
                     />
-                  );
+                  )
                 }
-                return (
-                  <FieldInput field={field} value={val} onChange={onChg} />
-                );
+                return <FieldInput field={field} value={val} onChange={onChg} />
               })()}
             </div>
           </div>
@@ -150,10 +148,10 @@ function EditComponent() {
             disabled={saving}
             className="px-4 py-2 bg-foreground text-background text-sm disabled:opacity-50"
           >
-            {saving ? "Saving…" : "Save"}
+            {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
       </form>
     </div>
-  );
+  )
 }

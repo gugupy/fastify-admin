@@ -3,160 +3,168 @@ import {
   Link,
   redirect,
   useRouter,
-} from "@tanstack/react-router";
-import { useState, useRef, useEffect } from "react";
-import { useRbac } from "../lib/rbac";
-import { getAdmin } from "../lib/FastifyAdmin";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+} from '@tanstack/react-router'
+import { useState, useRef, useEffect } from 'react'
+import { useRbac } from '../lib/rbac'
+import { getAdmin } from '../lib/FastifyAdmin'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Field,
   FieldError,
   FieldLabel,
   FieldSeparator,
-} from "@/components/ui/field";
-import { EyeIcon, EyeOffIcon, FastifyAdminIcon } from "../components/icons";
-import {
-  GoogleIcon,
-  GitHubIcon,
-  MicrosoftIcon,
-} from "../components/OAuthIcons";
-import { ThemeToggle } from "../components/ThemeToggle";
+} from '@/components/ui/field'
+import { EyeIcon, EyeOffIcon, FastifyAdminIcon } from '../components/icons'
+import { GoogleIcon, GitHubIcon, MicrosoftIcon } from '../components/OAuthIcons'
+import { ThemeToggle } from '../components/ThemeToggle'
 
-const CODE_LENGTH = 6;
+const CODE_LENGTH = 6
 
-export const Route = createFileRoute("/signup")({
+export const Route = createFileRoute('/signup')({
   beforeLoad: () => {
     if (!getAdmin().signup) {
-      throw redirect({ to: "/login" });
+      throw redirect({ to: '/login' })
     }
   },
   component: SignupPage,
-});
+})
 
 function SignupPage() {
-  const { refresh } = useRbac();
-  const router = useRouter();
-  const [username, setUsername] = useState("");
-  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""));
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const { refresh } = useRbac()
+  const router = useRouter()
+  const [username, setUsername] = useState('')
+  const [usernameStatus, setUsernameStatus] = useState<
+    'idle' | 'checking' | 'available' | 'taken'
+  >('idle')
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [otpSent, setOtpSent] = useState(false)
+  const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''))
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
   useEffect(() => {
-    if (otpSent) inputRefs.current[0]?.focus();
-  }, [otpSent]);
+    if (otpSent) inputRefs.current[0]?.focus()
+  }, [otpSent])
 
   useEffect(() => {
-    if (username.length < 2) {
-      setUsernameStatus("idle");
-      return;
+    if (username.length < 5) {
+      setUsernameStatus('idle')
+      return
     }
-    setUsernameStatus("checking");
+
+    // Prevent race conditions when users type fast.
+    // This avoids outdated responses overriding newer ones.
+    const controller = new AbortController()
+
+    setUsernameStatus('checking')
     const timer = setTimeout(async () => {
-      const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(username)}`);
-      const body = await res.json().catch(() => ({}));
-      setUsernameStatus(body.available ? "available" : "taken");
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [username]);
+      const res = await fetch(
+        `/api/auth/check-username?username=${encodeURIComponent(username)}`,
+      )
+      const body = await res.json().catch(() => ({}))
+      setUsernameStatus(body.available ? 'available' : 'taken')
+    }, 400)
+    return () => {
+      controller.abort()
+      clearTimeout(timer)
+    }
+  }, [username])
 
-  const { google, github, microsoft } = getAdmin().oauth;
-  const hasOAuth = google || github || microsoft;
+  const { google, github, microsoft } = getAdmin().oauth
+  const hasOAuth = google || github || microsoft
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
+  async function handleSubmit(e: React.SubmitEvent) {
+    e.preventDefault()
+    setError(null)
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("Invalid email address.");
-      return;
+      setError('Invalid email address.')
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
 
-    const res = await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, fullName, email, password }),
-    });
+    })
 
-    const body = await res.json().catch(() => ({}));
+    const body = await res.json().catch(() => ({}))
 
     if (!res.ok) {
-      setError(body.message ?? "Signup failed.");
-      setLoading(false);
-      return;
+      setError(body.message ?? 'Signup failed.')
+      setLoading(false)
+      return
     }
 
     if (!body.requiresVerification) {
-      await refresh();
-      router.navigate({ to: "/" });
-      return;
+      await refresh()
+      router.navigate({ to: '/' })
+      return
     }
 
-    setOtpSent(true);
-    setLoading(false);
+    setOtpSent(true)
+    setLoading(false)
   }
 
   function handleDigitChange(idx: number, val: string) {
-    const digit = val.replace(/\D/g, "").slice(-1);
-    const next = [...digits];
-    next[idx] = digit;
-    setDigits(next);
-    if (digit && idx < CODE_LENGTH - 1) inputRefs.current[idx + 1]?.focus();
-    if (next.every((d) => d)) submitOtp(next.join(""));
+    const digit = val.replace(/\D/g, '').slice(-1)
+    const next = [...digits]
+    next[idx] = digit
+    setDigits(next)
+    if (digit && idx < CODE_LENGTH - 1) inputRefs.current[idx + 1]?.focus()
+    if (next.every((d) => d)) submitOtp(next.join(''))
   }
 
   function handleDigitKeyDown(
     idx: number,
     e: React.KeyboardEvent<HTMLInputElement>,
   ) {
-    if (e.key === "Backspace" && !digits[idx] && idx > 0)
-      inputRefs.current[idx - 1]?.focus();
+    if (e.key === 'Backspace' && !digits[idx] && idx > 0)
+      inputRefs.current[idx - 1]?.focus()
   }
 
   function handlePaste(e: React.ClipboardEvent) {
-    e.preventDefault();
+    e.preventDefault()
     const pasted = e.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, CODE_LENGTH);
-    if (!pasted) return;
-    const next = Array(CODE_LENGTH).fill("");
-    for (let i = 0; i < pasted.length; i++) next[i] = pasted[i];
-    setDigits(next);
-    inputRefs.current[Math.min(pasted.length, CODE_LENGTH - 1)]?.focus();
-    if (pasted.length === CODE_LENGTH) submitOtp(pasted);
+      .getData('text')
+      .replace(/\D/g, '')
+      .slice(0, CODE_LENGTH)
+    if (!pasted) return
+    const next = Array(CODE_LENGTH).fill('')
+    for (let i = 0; i < pasted.length; i++) next[i] = pasted[i]
+    setDigits(next)
+    inputRefs.current[Math.min(pasted.length, CODE_LENGTH - 1)]?.focus()
+    if (pasted.length === CODE_LENGTH) submitOtp(pasted)
   }
 
   async function submitOtp(code: string) {
-    setError(null);
-    setLoading(true);
+    setError(null)
+    setLoading(true)
 
-    const res = await fetch("/api/auth/signup/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const res = await fetch('/api/auth/signup/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, code }),
-    });
+    })
 
     if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      setError(body.message ?? "Verification failed.");
-      setDigits(Array(CODE_LENGTH).fill(""));
-      setLoading(false);
-      inputRefs.current[0]?.focus();
-      return;
+      const body = await res.json().catch(() => ({}))
+      setError(body.message ?? 'Verification failed.')
+      setDigits(Array(CODE_LENGTH).fill(''))
+      setLoading(false)
+      inputRefs.current[0]?.focus()
+      return
     }
 
-    await refresh();
-    router.navigate({ to: "/" });
+    await refresh()
+    router.navigate({ to: '/' })
   }
 
   return (
@@ -193,7 +201,7 @@ function SignupPage() {
                   <input
                     key={i}
                     ref={(el) => {
-                      inputRefs.current[i] = el;
+                      inputRefs.current[i] = el
                     }}
                     type="text"
                     inputMode="numeric"
@@ -214,19 +222,19 @@ function SignupPage() {
                 size="lg"
                 className="w-full"
                 disabled={loading || digits.some((d) => !d)}
-                onClick={() => submitOtp(digits.join(""))}
+                onClick={() => submitOtp(digits.join(''))}
               >
-                {loading ? "Verifying…" : "Verify email"}
+                {loading ? 'Verifying…' : 'Verify email'}
               </Button>
               <p className="text-center text-sm text-muted-foreground mt-4">
-                Didn't receive the code?{" "}
+                Didn't receive the code?{' '}
                 <button
                   type="button"
                   className="text-foreground font-medium underline underline-offset-4 hover:text-primary"
                   onClick={() => {
-                    setOtpSent(false);
-                    setDigits(Array(CODE_LENGTH).fill(""));
-                    setError(null);
+                    setOtpSent(false)
+                    setDigits(Array(CODE_LENGTH).fill(''))
+                    setError(null)
                   }}
                 >
                   Back to sign up
@@ -296,17 +304,23 @@ function SignupPage() {
                       className="pr-8"
                       required
                     />
-                    {usernameStatus === "checking" && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">…</span>
+                    {usernameStatus === 'checking' && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                        …
+                      </span>
                     )}
-                    {usernameStatus === "available" && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-500">✓</span>
+                    {usernameStatus === 'available' && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-500">
+                        ✓
+                      </span>
                     )}
-                    {usernameStatus === "taken" && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-destructive">✗</span>
+                    {usernameStatus === 'taken' && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-destructive">
+                        ✗
+                      </span>
                     )}
                   </div>
-                  {usernameStatus === "taken" && (
+                  {usernameStatus === 'taken' && (
                     <FieldError>Username is already taken.</FieldError>
                   )}
                 </Field>
@@ -342,7 +356,7 @@ function SignupPage() {
                   <div className="relative">
                     <Input
                       id="password"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       autoComplete="new-password"
                       placeholder="••••••••"
                       value={password}
@@ -356,7 +370,7 @@ function SignupPage() {
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       tabIndex={-1}
                       aria-label={
-                        showPassword ? "Hide password" : "Show password"
+                        showPassword ? 'Hide password' : 'Show password'
                       }
                     >
                       {showPassword ? (
@@ -372,11 +386,15 @@ function SignupPage() {
 
                 <Button
                   type="submit"
-                  disabled={loading || usernameStatus === "taken" || usernameStatus === "checking"}
+                  disabled={
+                    loading ||
+                    usernameStatus === 'taken' ||
+                    usernameStatus === 'checking'
+                  }
                   size="lg"
                   className="w-full mt-1"
                 >
-                  {loading ? "Creating account…" : "Create account"}
+                  {loading ? 'Creating account…' : 'Create account'}
                 </Button>
               </form>
             </>
@@ -384,7 +402,7 @@ function SignupPage() {
         </div>
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
+          Already have an account?{' '}
           <Link
             to="/login"
             className="text-foreground font-medium underline underline-offset-4 hover:text-primary"
@@ -394,5 +412,5 @@ function SignupPage() {
         </p>
       </div>
     </div>
-  );
+  )
 }

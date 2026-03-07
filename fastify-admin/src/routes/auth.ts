@@ -4,6 +4,7 @@ import fastifyOAuth2, { type OAuth2Namespace } from '@fastify/oauth2'
 import { User } from '../entities/user.entity.js'
 import { hashPassword, verifyPassword } from '../lib/password.js'
 import { sendMfaCode } from '../lib/mailer.js'
+import { loadPermissions, generateUsername } from '../lib/auth-utils.js'
 
 declare module '@fastify/jwt' {
   interface FastifyJWT {
@@ -20,42 +21,6 @@ declare module 'fastify' {
   }
 }
 
-async function loadPermissions(
-  em: EntityManager,
-  userId: number,
-): Promise<string[]> {
-  const user = await em.findOne(
-    User,
-    { id: userId },
-    { populate: ['roles', 'roles.permissions'] },
-  )
-  if (!user) return []
-  const names = new Set<string>()
-  for (const role of user.roles) {
-    for (const perm of role.permissions) {
-      names.add(perm.name)
-    }
-  }
-  return [...names]
-}
-
-async function generateUsername(
-  fork: EntityManager,
-  email: string,
-): Promise<string> {
-  const base =
-    email
-      .split('@')[0]
-      .replace(/[^a-z0-9_]/gi, '')
-      .toLowerCase() || 'user'
-  let username = base
-  let i = 1
-  while (await fork.findOne(User, { username })) {
-    username = `${base}${i++}`
-  }
-  return username
-}
-
 async function loginOrCreateOAuthUser(
   app: FastifyInstance,
   em: EntityManager,
@@ -64,6 +29,7 @@ async function loginOrCreateOAuthUser(
     fullName: string
     provider: string
     oauthId: string
+    emailVerified: boolean
   },
   reply: any,
 ) {
@@ -78,8 +44,9 @@ async function loginOrCreateOAuthUser(
       email: profile.email,
       oauthProvider: profile.provider,
       oauthId: profile.oauthId,
+      emailVerified: profile.emailVerified,
     })
-    await fork.persistAndFlush(user)
+    await fork.persist(user).flush()
   }
 
   const token = app.jwt.sign({ sub: user.id, email: user.email })
@@ -115,7 +82,7 @@ export async function registerAuthRoutes(
       '/api/auth/check-username',
       async (req, reply) => {
         const { username } = req.query
-        if (!username || username.length < 2)
+        if (!username || username.length < 5)
           return reply.send({ available: false })
         const fork = em.fork()
         const existing = await fork.findOne(User, { username })
@@ -149,12 +116,12 @@ export async function registerAuthRoutes(
           const code = String(Math.floor(100000 + Math.random() * 900000))
           user.mfaCode = await hashPassword(code)
           user.mfaCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000)
-          await fork.persistAndFlush(user)
+          await fork.persist(user).flush()
           await sendMfaCode(email, code)
           return reply.send({ ok: true, requiresVerification: true })
         }
 
-        await fork.persistAndFlush(user)
+        await fork.persist(user).flush()
       } catch (err: any) {
         if (err?.code === '23505') {
           const column = err?.detail?.match(/Key \((\w+)\)/)?.[1]
@@ -197,6 +164,7 @@ export async function registerAuthRoutes(
         }
         user.mfaCode = undefined
         user.mfaCodeExpiresAt = undefined
+        user.emailVerified = true
         await fork.flush()
         const token = app.jwt.sign({ sub: user.id, email: user.email })
         reply
@@ -225,6 +193,9 @@ export async function registerAuthRoutes(
         !(await verifyPassword(password, user.password))
       ) {
         return reply.status(401).send({ message: 'Invalid credentials.' })
+      }
+      if (opts.requireEmailVerification && !user.emailVerified) {
+        return reply.status(403).send({ message: 'Email not verified.' })
       }
       if (user.mfaEnabled) {
         const code = String(Math.floor(100000 + Math.random() * 900000))
@@ -404,10 +375,12 @@ export async function registerOAuthRoutes(
       const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: { Authorization: `Bearer ${token.token.access_token}` },
       })
+      globalThis.console.log(await res.json())
       const profile = (await res.json()) as {
         id: string
         email: string
         name: string
+        verified_email: boolean
       }
       await loginOrCreateOAuthUser(
         app,
@@ -417,6 +390,7 @@ export async function registerOAuthRoutes(
           fullName: profile.name,
           provider: 'google',
           oauthId: profile.id,
+          emailVerified: profile.verified_email,
         },
         reply,
       )
@@ -480,6 +454,7 @@ export async function registerOAuthRoutes(
           fullName: user.name ?? primaryEmail,
           provider: 'github',
           oauthId: String(user.id),
+          emailVerified: true,
         },
         reply,
       )
@@ -517,6 +492,7 @@ export async function registerOAuthRoutes(
         displayName: string
         mail: string
         userPrincipalName: string
+        verified_email: boolean
       }
       const email = profile.mail ?? profile.userPrincipalName
       await loginOrCreateOAuthUser(
@@ -527,6 +503,7 @@ export async function registerOAuthRoutes(
           fullName: profile.displayName,
           provider: 'microsoft',
           oauthId: profile.id,
+          emailVerified: profile.verified_email,
         },
         reply,
       )

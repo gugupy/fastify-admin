@@ -1,4 +1,4 @@
-import type { IconSvgElement } from "@hugeicons/react";
+import type { IconSvgElement } from '@hugeicons/react'
 import type {
   EntityConfig,
   EntityPermissions,
@@ -8,8 +8,8 @@ import type {
   AddConfig,
   RowAction,
   Operation,
-} from "./entityRegistry";
-import { ALL_OPERATIONS } from "./entityRegistry";
+} from './entityRegistry'
+import { ALL_OPERATIONS } from './entityRegistry'
 
 /**
  * Base class for entity admin configuration.
@@ -30,46 +30,46 @@ import { ALL_OPERATIONS } from "./entityRegistry";
  */
 export class AdminResource {
   /** Sidebar display name. Defaults to capitalized entity name. */
-  label?: string;
+  label?: string
 
   /** Icon shown in the sidebar next to the label. */
-  icon?: IconSvgElement;
+  icon?: IconSvgElement
 
   /** Whether to show this entity in the sidebar. Default: true. */
-  sidebar = true;
+  sidebar = true
 
   /**
    * Which CRUD operations are enabled for this entity.
    * Controls visibility of New / Edit / Delete / View buttons and route guards.
    * Default: all operations.
    */
-  operations: Operation[] = [...ALL_OPERATIONS];
+  operations: Operation[] = [...ALL_OPERATIONS]
 
   // ── View customization ──────────────────────────────────────────────────
 
   /** Columns shown in the list table. Return empty array to show all. */
   listColumns(): string[] {
-    return [];
+    return []
   }
 
   /** Fields shown on the detail (show) page. Return empty array to show all. */
   showFields(): string[] {
-    return [];
+    return []
   }
 
   /** Fields included in the edit form. Return empty array to show all editable fields. */
   editFields(): string[] {
-    return [];
+    return []
   }
 
   /** Fields included in the create (add) form. Return empty array to show all editable fields. */
   addFields(): string[] {
-    return [];
+    return []
   }
 
   /** Custom row actions shown as extra buttons in the list table. */
   rowActions(): RowAction[] {
-    return [];
+    return []
   }
 
   // ── Permission overrides ────────────────────────────────────────────────
@@ -79,33 +79,33 @@ export class AdminResource {
    * By default: `{model}.list`, `{model}.show`, `{model}.create`, `{model}.edit`, `{model}.delete`.
    */
   permissions(): EntityPermissions {
-    return {};
+    return {}
   }
 
   // ── Advanced overrides ──────────────────────────────────────────────────
 
   /** Full list view config override. Merges with listColumns(). */
   get listConfig(): ListConfig {
-    const cols = this.listColumns();
-    return cols.length ? { columns: cols } : {};
+    const cols = this.listColumns()
+    return cols.length ? { columns: cols } : {}
   }
 
   /** Full show view config override. Merges with showFields(). */
   get showConfig(): ShowConfig {
-    const fields = this.showFields();
-    return fields.length ? { fields } : {};
+    const fields = this.showFields()
+    return fields.length ? { fields } : {}
   }
 
   /** Full edit view config override. Merges with editFields(). */
   get editConfig(): EditConfig {
-    const fields = this.editFields();
-    return fields.length ? { fields } : {};
+    const fields = this.editFields()
+    return fields.length ? { fields } : {}
   }
 
   /** Full add view config override. Merges with addFields(). */
   get addConfig(): AddConfig {
-    const fields = this.addFields();
-    return fields.length ? { fields } : {};
+    const fields = this.addFields()
+    return fields.length ? { fields } : {}
   }
 
   // ── Internal ────────────────────────────────────────────────────────────
@@ -123,6 +123,6 @@ export class AdminResource {
       edit: this.editConfig,
       add: this.addConfig,
       actions: this.rowActions(),
-    };
+    }
   }
 }

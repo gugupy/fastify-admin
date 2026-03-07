@@ -1,68 +1,64 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
-import { EyeIcon, EyeOffIcon, FastifyAdminIcon } from "../components/icons";
-import { useRbac } from "../lib/rbac";
-import { getAdmin } from "../lib/FastifyAdmin";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+import { useState } from 'react'
+import { EyeIcon, EyeOffIcon, FastifyAdminIcon } from '../components/icons'
+import { useRbac } from '../lib/rbac'
+import { getAdmin } from '../lib/FastifyAdmin'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Field,
   FieldError,
   FieldLabel,
   FieldSeparator,
-} from "@/components/ui/field";
-import {
-  GoogleIcon,
-  GitHubIcon,
-  MicrosoftIcon,
-} from "../components/OAuthIcons";
-import { ThemeToggle } from "../components/ThemeToggle";
+} from '@/components/ui/field'
+import { GoogleIcon, GitHubIcon, MicrosoftIcon } from '../components/OAuthIcons'
+import { ThemeToggle } from '../components/ThemeToggle'
 
-export const Route = createFileRoute("/login")({
+export const Route = createFileRoute('/login')({
   component: LoginPage,
-});
+})
 
 function LoginPage() {
-  const { refresh } = useRbac();
-  const router = useRouter();
-  const [identity, setIdentity] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const { refresh } = useRbac()
+  const router = useRouter()
+  const [identity, setIdentity] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  const { google, github, microsoft } = getAdmin().oauth;
-  const hasOAuth = google || github || microsoft;
+  const { google, github, microsoft } = getAdmin().oauth
+  const hasOAuth = google || github || microsoft
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+  async function handleSubmit(e: React.SubmitEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: identity, password }),
-    });
+    })
 
-    const body = await res.json().catch(() => ({}));
+    const body = await res.json().catch(() => ({}))
 
     if (res.status === 202 && body.mfaRequired) {
       router.navigate({
-        to: "/verify-mfa",
+        to: '/verify-mfa',
         search: { userId: body.userId, email: identity },
-      });
-      return;
+      })
+      return
     }
 
     if (!res.ok) {
-      setError(body.message ?? "Login failed.");
-      setLoading(false);
-      return;
+      setError(body.message ?? 'Login failed.')
+      setLoading(false)
+      return
     }
 
-    await refresh();
-    router.navigate({ to: "/" });
+    await refresh()
+    router.navigate({ to: '/' })
   }
 
   return (
@@ -152,7 +148,7 @@ function LoginPage() {
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   placeholder="••••••••"
                   value={password}
@@ -165,7 +161,7 @@ function LoginPage() {
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   tabIndex={-1}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
                     <EyeOffIcon size={16} />
@@ -184,14 +180,14 @@ function LoginPage() {
               size="lg"
               className="w-full mt-1"
             >
-              {loading ? "Signing in…" : "Sign in"}
+              {loading ? 'Signing in…' : 'Sign in'}
             </Button>
           </form>
         </div>
 
         {getAdmin().signup && (
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
+            Don't have an account?{' '}
             <Link
               to="/signup"
               className="text-foreground font-medium underline underline-offset-4 hover:text-primary"
@@ -202,5 +198,5 @@ function LoginPage() {
         )}
       </div>
     </div>
-  );
+  )
 }

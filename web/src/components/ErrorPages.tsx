@@ -1,20 +1,16 @@
-import { Link } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { Sidebar } from "./Sidebar";
-import { useRbac } from "../lib/rbac";
-import { useHasLayout } from "../routes/__root";
+import { Link } from '@tanstack/react-router'
+import { Button } from '@/components/ui/button'
+import { Sidebar } from './Sidebar'
+import { useRbac } from '../lib/rbac'
+import { useHasLayout } from '../routes/__root'
 
 function ErrorContent({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="w-full max-w-sm text-center mb-24">
-      {children}
-    </div>
-  );
+  return <div className="w-full max-w-sm text-center mb-24">{children}</div>
 }
 
 function ErrorLayout({ children }: { children: React.ReactNode }) {
-  const hasLayout = useHasLayout();
-  const { unauthenticated } = useRbac();
+  const hasLayout = useHasLayout()
+  const { unauthenticated } = useRbac()
 
   // Already inside the sidebar layout (AuthGuard rendered it) — just center
   if (hasLayout) {
@@ -22,7 +18,7 @@ function ErrorLayout({ children }: { children: React.ReactNode }) {
       <div className="h-full flex items-center justify-center px-4">
         {children}
       </div>
-    );
+    )
   }
 
   // Standalone (notFoundComponent rendered outside root component tree)
@@ -31,7 +27,7 @@ function ErrorLayout({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex items-center justify-center px-4">
         {children}
       </div>
-    );
+    )
   }
 
   return (
@@ -41,7 +37,7 @@ function ErrorLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
     </div>
-  );
+  )
 }
 
 export function NotFoundPage() {
@@ -60,15 +56,15 @@ export function NotFoundPage() {
         </Button>
       </ErrorContent>
     </ErrorLayout>
-  );
+  )
 }
 
 export function ErrorPage({
   error,
   reset,
 }: {
-  error: Error;
-  reset: () => void;
+  error: Error
+  reset: () => void
 }) {
   return (
     <ErrorLayout>
@@ -95,5 +91,5 @@ export function ErrorPage({
         </div>
       </ErrorContent>
     </ErrorLayout>
-  );
+  )
 }

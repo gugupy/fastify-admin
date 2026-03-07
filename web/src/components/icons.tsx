@@ -1,4 +1,4 @@
-type IconProps = { size?: number; className?: string };
+type IconProps = { size?: number; className?: string }
 
 export function FastifyAdminIcon({ size = 20, className }: IconProps) {
   return (
@@ -19,7 +19,7 @@ export function FastifyAdminIcon({ size = 20, className }: IconProps) {
         strokeLinecap="round"
       />
     </svg>
-  );
+  )
 }
 
 export function EyeIcon({ size = 20, className }: IconProps) {
@@ -38,7 +38,7 @@ export function EyeIcon({ size = 20, className }: IconProps) {
       <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
       <circle cx="12" cy="12" r="3" />
     </svg>
-  );
+  )
 }
 
 export function EyeOffIcon({ size = 20, className }: IconProps) {
@@ -58,5 +58,5 @@ export function EyeOffIcon({ size = 20, className }: IconProps) {
       <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c6.4 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19" />
       <line x1="1" y1="1" x2="23" y2="23" />
     </svg>
-  );
+  )
 }

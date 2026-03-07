@@ -1,23 +1,23 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { useRbac } from "../lib/rbac";
-import { entityRegistry, perm } from "../lib/entityRegistry";
-import { getAdmin } from "../lib/FastifyAdmin";
-import type { EntityCount } from "../types/entity";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
+import { useRbac } from '../lib/rbac'
+import { entityRegistry, perm } from '../lib/entityRegistry'
+import { getAdmin } from '../lib/FastifyAdmin'
+import type { EntityCount } from '../types/entity'
+import { HugeiconsIcon } from '@hugeicons/react'
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute('/')({
   component: DashboardPage,
-});
+})
 
 function capitalize(str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 function StatCard({ name, count }: EntityCount) {
-  const config = entityRegistry.get(name);
-  const label = config.label ?? capitalize(name);
-  const Icon = config.icon;
+  const config = entityRegistry.get(name)
+  const label = config.label ?? capitalize(name)
+  const Icon = config.icon
 
   return (
     <Link
@@ -39,38 +39,38 @@ function StatCard({ name, count }: EntityCount) {
         {count.toLocaleString()}
       </p>
     </Link>
-  );
+  )
 }
 
 export default function DashboardPage() {
-  const { user, can } = useRbac();
-  const [counts, setCounts] = useState<EntityCount[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user, can } = useRbac()
+  const [counts, setCounts] = useState<EntityCount[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("/api/dashboard")
+    fetch('/api/dashboard')
       .then((r) => r.json())
       .then((data: EntityCount[]) => {
-        setCounts(data);
-        setLoading(false);
+        setCounts(data)
+        setLoading(false)
       })
-      .catch(() => setLoading(false));
-  }, []);
+      .catch(() => setLoading(false))
+  }, [])
 
   const visibleCounts = counts.filter(({ name }) => {
-    if (getAdmin().securityEntities.includes(name)) return false;
-    const config = entityRegistry.get(name);
-    return can(perm(config, name, "list"));
-  });
+    if (getAdmin().securityEntities.includes(name)) return false
+    const config = entityRegistry.get(name)
+    return can(perm(config, name, 'list'))
+  })
 
   const greeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
-  };
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Good morning'
+    if (hour < 18) return 'Good afternoon'
+    return 'Good evening'
+  }
 
-  const displayName = user?.fullName || user?.email?.split("@")[0] || "there";
+  const displayName = user?.fullName || user?.email?.split('@')[0] || 'there'
 
   return (
     <div className="max-w-5xl mx-auto px-8 py-8">
@@ -104,5 +104,5 @@ export default function DashboardPage() {
         </div>
       )}
     </div>
-  );
+  )
 }

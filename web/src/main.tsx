@@ -1,32 +1,32 @@
-import ReactDOM from "react-dom/client";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { routeTree } from "./routeTree.gen";
-import "./index.css";
+import ReactDOM from 'react-dom/client'
+import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { routeTree } from './routeTree.gen'
+import './index.css'
 
-import { FastifyAdmin } from "./lib/FastifyAdmin";
-import { ThemeProvider } from "./lib/theme";
+import { FastifyAdmin } from './lib/FastifyAdmin'
+import { ThemeProvider } from './lib/theme'
 
 import {
   User03Icon,
   ShieldUserIcon,
   LockKeyIcon,
   Package01Icon,
-} from "@hugeicons/core-free-icons";
+} from '@hugeicons/core-free-icons'
 
 const router = createRouter({
   routeTree,
-  defaultPreload: "intent",
+  defaultPreload: 'intent',
   scrollRestoration: true,
-  notFoundMode: "root",
-});
+  notFoundMode: 'root',
+})
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface Register {
-    router: typeof router;
+    router: typeof router
   }
 }
 
-const rootElement = document.getElementById("root")!;
+const rootElement = document.getElementById('root')!
 
 async function init() {
   await FastifyAdmin.initFromApi({
@@ -34,16 +34,16 @@ async function init() {
     ShieldUser: ShieldUserIcon,
     LockKey: LockKeyIcon,
     Package01: Package01Icon,
-  });
+  })
 
   if (!rootElement.innerHTML) {
-    const root = ReactDOM.createRoot(rootElement);
+    const root = ReactDOM.createRoot(rootElement)
     root.render(
       <ThemeProvider>
         <RouterProvider router={router} />
       </ThemeProvider>,
-    );
+    )
   }
 }
 
-init();
+init()

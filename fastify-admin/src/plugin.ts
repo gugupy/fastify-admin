@@ -25,9 +25,9 @@ async function fastifyAdminPlugin(
 ) {
   const {
     orm,
-    name = 'Admin',
+    name = 'Fastify Admin',
     signup = true,
-    requireEmailVerification = !!process.env.SMTP_HOST,
+    requireEmailVerification = false,
     resources = {},
     securityEntities = ['user', 'role', 'permission'],
     appBaseUrl = process.env.APP_BASE_URL ?? 'http://localhost:3001',

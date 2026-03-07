@@ -437,9 +437,7 @@ export default function ProfilePage() {
               <div>
                 <Button
                   type="button"
-                  disabled={
-                    emailSaving || newEmail === user.email || !newEmail
-                  }
+                  disabled={emailSaving || newEmail === user.email || !newEmail}
                   onClick={requestEmailChange}
                 >
                   {emailSaving ? 'Sending code…' : 'Update email'}
@@ -490,7 +488,9 @@ export default function ProfilePage() {
               <Button type="submit" disabled={passwordSaving}>
                 {passwordSaving
                   ? 'Saving…'
-                  : user.hasPassword ? 'Update password' : 'Set password'}
+                  : user.hasPassword
+                    ? 'Update password'
+                    : 'Set password'}
               </Button>
               {passwordSuccess && (
                 <span className="text-xs text-green-600">
