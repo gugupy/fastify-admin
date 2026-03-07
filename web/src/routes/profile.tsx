@@ -333,34 +333,36 @@ export default function ProfilePage() {
       </div>
 
       <div className="border  bg-background px-6">
-        {/* Profile info */}
-        {can('profile.edit') && (
-          <Section title="Personal information">
-            <form onSubmit={saveProfile} className="flex flex-col gap-4">
-              <Field>
-                <FieldLabel htmlFor="username">Username</FieldLabel>
-                <Input id="username" value={user.username} disabled />
-                <FieldDescription>Username cannot be changed.</FieldDescription>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="fullName">Full name</FieldLabel>
-                <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="bio">Bio</FieldLabel>
-                <Input
-                  id="bio"
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="A short bio…"
-                />
-              </Field>
-              {profileError && <FieldError>{profileError}</FieldError>}
+        {/* Profile info — always visible, edit controls hidden without permission */}
+        <Section title="Personal information">
+          <form onSubmit={saveProfile} className="flex flex-col gap-4">
+            <Field>
+              <FieldLabel htmlFor="username">Username</FieldLabel>
+              <Input id="username" value={user.username} disabled />
+              <FieldDescription>Username cannot be changed.</FieldDescription>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="fullName">Full name</FieldLabel>
+              <Input
+                id="fullName"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                disabled={!can('profile.edit')}
+                required
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="bio">Bio</FieldLabel>
+              <Input
+                id="bio"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="A short bio…"
+                disabled={!can('profile.edit')}
+              />
+            </Field>
+            {profileError && <FieldError>{profileError}</FieldError>}
+            {can('profile.edit') && (
               <div className="flex items-center gap-3">
                 <Button type="submit" disabled={profileSaving}>
                   {profileSaving ? 'Saving…' : 'Save changes'}
@@ -369,79 +371,78 @@ export default function ProfilePage() {
                   <span className="text-xs text-green-600">Saved!</span>
                 )}
               </div>
-            </form>
-          </Section>
-        )}
+            )}
+          </form>
+        </Section>
 
-        {/* Email */}
-        {can('profile.email') && (
-          <Section
-            title="Email address"
-            description="Your email is used for login and notifications."
-          >
-            {emailOtpSent ? (
-              <>
-                <p className="text-sm text-muted-foreground">
-                  We sent a 6-digit code to{' '}
-                  <span className="text-foreground font-medium">
-                    {newEmail}
-                  </span>
-                  . Enter it to confirm your new email.
-                </p>
-                <div className="flex gap-2" onPaste={handleEmailPaste}>
-                  {emailDigits.map((d, i) => (
-                    <input
-                      key={i}
-                      ref={(el) => {
-                        emailInputRefs.current[i] = el
-                      }}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={1}
-                      value={d}
-                      onChange={(e) =>
-                        handleEmailDigitChange(i, e.target.value)
-                      }
-                      onKeyDown={(e) => handleEmailDigitKeyDown(i, e)}
-                      disabled={emailSaving}
-                      className="w-10 h-12 rounded-md border border-input bg-background text-center text-lg font-semibold focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring disabled:opacity-50"
-                    />
-                  ))}
-                </div>
-                {emailError && <FieldError>{emailError}</FieldError>}
-                <div className="flex items-center gap-3">
-                  <Button
-                    type="button"
-                    disabled={emailSaving || emailDigits.some((d) => !d)}
-                    onClick={() => submitEmailOtp(emailDigits.join(''))}
-                  >
-                    {emailSaving ? 'Verifying…' : 'Confirm email'}
-                  </Button>
-                  <button
-                    type="button"
-                    className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-                    onClick={() => {
-                      setEmailOtpSent(false)
-                      setEmailDigits(Array(CODE_LENGTH).fill(''))
-                      setEmailError(null)
+        {/* Email — always visible, update controls hidden without permission */}
+        <Section
+          title="Email address"
+          description="Your email is used for login and notifications."
+        >
+          {emailOtpSent ? (
+            <>
+              <p className="text-sm text-muted-foreground">
+                We sent a 6-digit code to{' '}
+                <span className="text-foreground font-medium">{newEmail}</span>.
+                Enter it to confirm your new email.
+              </p>
+              <div className="flex gap-2" onPaste={handleEmailPaste}>
+                {emailDigits.map((d, i) => (
+                  <input
+                    key={i}
+                    ref={(el) => {
+                      emailInputRefs.current[i] = el
                     }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="flex flex-col gap-4">
-                <Field>
-                  <FieldLabel htmlFor="email">Email</FieldLabel>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={d}
+                    onChange={(e) =>
+                      handleEmailDigitChange(i, e.target.value)
+                    }
+                    onKeyDown={(e) => handleEmailDigitKeyDown(i, e)}
+                    disabled={emailSaving}
+                    className="w-10 h-12 rounded-md border border-input bg-background text-center text-lg font-semibold focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring disabled:opacity-50"
                   />
-                </Field>
-                {emailError && <FieldError>{emailError}</FieldError>}
+                ))}
+              </div>
+              {emailError && <FieldError>{emailError}</FieldError>}
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  disabled={emailSaving || emailDigits.some((d) => !d)}
+                  onClick={() => submitEmailOtp(emailDigits.join(''))}
+                >
+                  {emailSaving ? 'Verifying…' : 'Confirm email'}
+                </Button>
+                <button
+                  type="button"
+                  className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                  onClick={() => {
+                    setEmailOtpSent(false)
+                    setEmailDigits(Array(CODE_LENGTH).fill(''))
+                    setEmailError(null)
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col gap-4">
+              <Field>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <Input
+                  id="email"
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  disabled={!can('profile.email')}
+                />
+              </Field>
+              {emailError && <FieldError>{emailError}</FieldError>}
+              {can('profile.email') && (
                 <div>
                   <Button
                     type="button"
@@ -453,10 +454,10 @@ export default function ProfilePage() {
                     {emailSaving ? 'Sending code…' : 'Update email'}
                   </Button>
                 </div>
-              </div>
-            )}
-          </Section>
-        )}
+              )}
+            </div>
+          )}
+        </Section>
 
         {/* Password */}
         {can('password.change') && (
