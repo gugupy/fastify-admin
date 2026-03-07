@@ -8,6 +8,7 @@
       "dev:web": "pnpm --filter web dev",
       "dev": "pnpm run dev:api & pnpm run dev:web",
       "create-admin": "pnpm --filter fastify-admin create-admin",
+      "seed:demo": "pnpm --filter fastify-admin seed:demo",
       "reset-password": "pnpm --filter fastify-admin reset-password",
       "migration:create": "pnpm --filter fastify-admin migration:create",
       "migration:up": "pnpm --filter fastify-admin migration:up",

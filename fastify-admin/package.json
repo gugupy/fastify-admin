@@ -23,6 +23,7 @@
     "start": "node dist/dev.js",
     "build": "tsc",
     "create-admin": "node --env-file=.env --no-warnings=ExperimentalWarning --loader ts-node/esm src/cli/index.ts create-admin",
+    "seed:demo": "node --env-file=.env --no-warnings=ExperimentalWarning --loader ts-node/esm src/seeders/demo.ts",
     "reset-password": "node --env-file=.env --no-warnings=ExperimentalWarning --loader ts-node/esm src/cli/index.ts reset-password",
     "migration:create": "mikro-orm-esm migration:create",
     "migration:up": "mikro-orm-esm migration:up",

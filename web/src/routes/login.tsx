@@ -81,6 +81,27 @@ function LoginPage() {
           </p>
         </div>
 
+        {import.meta.env.VITE_DEMO === 'true' && (
+          <div className="mb-4 border rounded-lg bg-background p-4 shadow-sm text-center">
+            <p className="text-xs text-muted-foreground mb-3">
+              Try the demo with a pre-seeded admin account
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setIdentity('demo@example.com')
+                setPassword('demo1234')
+              }}
+              className="text-sm font-medium underline underline-offset-4 text-foreground hover:text-primary"
+            >
+              Use demo account
+            </button>
+            <p className="text-[11px] text-muted-foreground mt-2">
+              demo@example.com · demo1234
+            </p>
+          </div>
+        )}
+
         <div className="border rounded-lg bg-background p-8 shadow-sm">
           {hasOAuth && (
             <>
