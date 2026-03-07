@@ -19,7 +19,7 @@ let h: ReturnType<typeof createHelpers>
 // ── Setup / Teardown ──────────────────────────────────────────────────────────
 
 beforeAll(async () => {
-  ctx = await buildApp()
+  ctx = await buildApp({ emailEnabled: true })
   h = createHelpers(() => ctx)
 
   // Seed: pre-existing user — used in taken-username, duplicate-email, and login tests
@@ -172,6 +172,7 @@ describe('GET /api/admin-config', () => {
     const body = res.json()
     expect(body.name).toBe('Test Admin')
     expect(body.signup).toBe(true)
+    expect(body.emailEnabled).toBe(true)
     expect(typeof body.entities).toBe('object')
   })
 })

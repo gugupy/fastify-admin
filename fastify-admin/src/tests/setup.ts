@@ -7,6 +7,7 @@ import { fastifyAdmin } from '../plugin.js'
 export async function buildApp(
   opts: {
     requireEmailVerification?: boolean
+    emailEnabled?: boolean
     resources?: Record<string, any>
   } = {},
 ) {
@@ -29,6 +30,7 @@ export async function buildApp(
     name: 'Test Admin',
     signup: true,
     requireEmailVerification: opts.requireEmailVerification ?? false,
+    emailEnabled: opts.emailEnabled ?? false,
     resources: opts.resources ?? {},
   })
 

@@ -84,6 +84,7 @@ describe('GET /api/auth/google/callback', () => {
           id: 'g-001',
           email: 'google@example.com',
           name: 'Google User',
+          verified_email: true,
         }),
       }),
     )

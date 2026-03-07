@@ -496,7 +496,6 @@ export async function registerOAuthRoutes(
         displayName: string
         mail: string
         userPrincipalName: string
-        verified_email: boolean
       }
       const email = profile.mail ?? profile.userPrincipalName
       await loginOrCreateOAuthUser(
@@ -507,7 +506,7 @@ export async function registerOAuthRoutes(
           fullName: profile.displayName,
           provider: 'microsoft',
           oauthId: profile.id,
-          emailVerified: profile.verified_email,
+          emailVerified: true,
         },
         reply,
       )
