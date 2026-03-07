@@ -6,7 +6,7 @@ import fastifyCookie from '@fastify/cookie'
 import fastifyJwt from '@fastify/jwt'
 import fastifyStatic from '@fastify/static'
 import fp from 'fastify-plugin'
-import type { FastifyInstance } from 'fastify'
+import type { FastifyPluginAsync } from 'fastify'
 import { EntityRegistry } from './registry.js'
 import {
   registerAuthRoutes,
@@ -19,10 +19,10 @@ import type { FastifyAdminOptions, AdminConfig } from './types.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-async function fastifyAdminPlugin(
-  app: FastifyInstance,
-  options: FastifyAdminOptions,
-) {
+const fastifyAdmin: FastifyPluginAsync<FastifyAdminOptions> = async (
+  app,
+  options,
+) => {
   const {
     orm,
     name = 'Fastify Admin',
@@ -147,10 +147,9 @@ async function fastifyAdminPlugin(
   await registerEntityRoutes(app, orm.em, registry)
 }
 
-export const createAdminPlugin = fp(fastifyAdminPlugin, {
+export default fp(fastifyAdmin, {
   name: 'fastify-admin',
-  fastify: '>=5',
+  fastify: '5.x',
 })
 
-/** Re-export so the plugin works with both named and default import styles. */
-export default createAdminPlugin
+export { fastifyAdmin }

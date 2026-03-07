@@ -13,6 +13,6 @@ All notable changes to this project will be documented in this file.
 - Email verification and MFA support
 - Collapsible sidebar with Security section
 - Light / dark / system theme toggle
-- Fastify plugin API (`createAdminPlugin`)
+- Fastify plugin API (`fastifyAdmin`)
 - CLI commands: `create-admin`, `reset-password`
 - Database migrations via MikroORM

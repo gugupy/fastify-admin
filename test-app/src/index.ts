@@ -1,6 +1,6 @@
 import Fastify from 'fastify'
 import { MikroORM } from '@mikro-orm/postgresql'
-import { createAdminPlugin, AdminResource } from 'fastify-admin'
+import { fastifyAdmin, AdminResource } from 'fastify-admin'
 import config from '../mikro-orm.config.js'
 
 class ProductResource extends AdminResource {
@@ -25,7 +25,7 @@ await orm.schema.updateSchema()
 
 const app = Fastify({ logger: true })
 
-await app.register(createAdminPlugin, {
+await app.register(fastifyAdmin, {
   orm,
   name: 'Test Admin',
   signup: true,

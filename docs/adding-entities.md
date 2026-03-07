@@ -47,7 +47,7 @@ That's it. Restart `pnpm dev` and you'll see "Post" in the sidebar with a full l
 By default, the UI shows all fields and enables all operations. You can customise this in `fastify-admin/src/dev.ts` by adding a resource config:
 
 ```ts
-await app.register(createAdminPlugin, {
+await app.register(fastifyAdmin, {
   orm,
   resources: {
     post: {

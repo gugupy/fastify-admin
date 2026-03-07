@@ -1,5 +1,6 @@
 import type { EntityClass } from '@mikro-orm/core'
 import type { MikroORM } from '@mikro-orm/core'
+import type { FastifyPluginOptions } from 'fastify'
 import type { AdminResource } from './AdminResource.js'
 
 export type Operation = 'list' | 'show' | 'create' | 'edit' | 'delete'
@@ -87,7 +88,7 @@ export interface OAuthProviderConfig {
 /** A resource entry: either a plain config object or an AdminResource class instance. */
 export type ResourceConfig = EntityConfig | AdminResource
 
-export interface FastifyAdminOptions {
+export interface FastifyAdminOptions extends FastifyPluginOptions {
   /** Your MikroORM instance (already initialised). */
   orm: MikroORM
   /** Display name for the admin panel. Default: 'Admin'. */

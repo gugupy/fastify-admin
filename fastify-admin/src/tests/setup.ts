@@ -2,7 +2,7 @@ import Fastify from 'fastify'
 import { MikroORM } from '@mikro-orm/postgresql'
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection'
 import { User, Role, Permission } from '../index.js'
-import { createAdminPlugin } from '../plugin.js'
+import { fastifyAdmin } from '../plugin.js'
 
 export async function buildApp(
   opts: {
@@ -24,7 +24,7 @@ export async function buildApp(
 
   const app = Fastify()
 
-  await app.register(createAdminPlugin, {
+  await app.register(fastifyAdmin, {
     orm,
     name: 'Test Admin',
     signup: true,

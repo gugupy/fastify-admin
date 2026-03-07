@@ -13,14 +13,14 @@
  */
 import { fastify } from 'fastify'
 import { MikroORM } from '@mikro-orm/postgresql'
-import { createAdminPlugin } from './plugin.js'
+import { fastifyAdmin } from './plugin.js'
 
 const orm = await MikroORM.init()
 await orm.migrator.up()
 
 const app = fastify({ logger: { level: 'info' } })
 
-await app.register(createAdminPlugin, {
+await app.register(fastifyAdmin, {
   orm,
   requireEmailVerification: true,
   resources: {

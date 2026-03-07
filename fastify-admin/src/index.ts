@@ -1,5 +1,5 @@
 // Main plugin
-export { createAdminPlugin, default } from './plugin.js'
+export { fastifyAdmin, default } from './plugin.js'
 
 // Base class for entity configuration
 export { AdminResource } from './AdminResource.js'

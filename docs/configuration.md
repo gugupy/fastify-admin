@@ -57,7 +57,7 @@ MICROSOFT_CLIENT_SECRET=
 When you register the admin plugin you can pass these options:
 
 ```ts
-await app.register(createAdminPlugin, {
+await app.register(fastifyAdmin, {
   // Required: your MikroORM instance
   orm,
 

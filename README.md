@@ -56,7 +56,7 @@ export class ProductResource extends AdminResource {
 ```ts
 import Fastify from 'fastify'
 import { MikroORM } from '@mikro-orm/postgresql'
-import { createAdminPlugin, User, Role, Permission } from 'fastify-admin'
+import { fastifyAdmin, User, Role, Permission } from 'fastify-admin'
 import { ProductResource } from './resources/product.resource.js'
 
 const orm = await MikroORM.init({
@@ -67,7 +67,7 @@ const orm = await MikroORM.init({
 
 const app = Fastify()
 
-await app.register(createAdminPlugin, {
+await app.register(fastifyAdmin, {
   orm,
   name: 'My Admin',
   signup: false,

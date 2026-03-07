@@ -74,7 +74,7 @@ Colors are defined as CSS variables in `web/src/index.css`. You can change them 
 The name and icon shown in the sidebar header come from the plugin config:
 
 ```ts
-await app.register(createAdminPlugin, {
+await app.register(fastifyAdmin, {
   orm,
   name: 'My App',   // shown in the sidebar header
   // icon is configured in web/src/lib/FastifyAdmin.ts
