@@ -28,6 +28,7 @@ const fastifyAdmin: FastifyPluginAsync<FastifyAdminOptions> = async (
     name = 'Fastify Admin',
     signup = true,
     requireEmailVerification = false,
+    emailEnabled = false,
     resources = {},
     securityEntities = ['user', 'role', 'permission'],
     appBaseUrl = process.env.APP_BASE_URL ?? 'http://localhost:3001',
@@ -85,7 +86,7 @@ const fastifyAdmin: FastifyPluginAsync<FastifyAdminOptions> = async (
 
   // ── Auth routes (public) ──────────────────────────────────────────────────
 
-  await registerAuthRoutes(app, orm.em, { signup, requireEmailVerification })
+  await registerAuthRoutes(app, orm.em, { signup, requireEmailVerification, emailEnabled })
   await registerOAuthRoutes(app, orm.em, appBaseUrl)
 
   // ── Admin config endpoint ─────────────────────────────────────────────────
@@ -99,6 +100,7 @@ const fastifyAdmin: FastifyPluginAsync<FastifyAdminOptions> = async (
       name,
       signup,
       requireEmailVerification,
+      emailEnabled,
       securityEntities,
       oauth: {
         google: !!(

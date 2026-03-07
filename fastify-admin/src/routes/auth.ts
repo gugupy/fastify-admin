@@ -58,9 +58,10 @@ async function loginOrCreateOAuthUser(
 export async function registerAuthRoutes(
   app: FastifyInstance,
   em: EntityManager,
-  opts: { signup: boolean; requireEmailVerification: boolean } = {
+  opts: { signup: boolean; requireEmailVerification: boolean; emailEnabled: boolean } = {
     signup: true,
     requireEmailVerification: false,
+    emailEnabled: false,
   },
 ) {
   app.get('/api/auth/providers', async (_req, reply) => {
@@ -333,6 +334,9 @@ export async function registerAuthRoutes(
       const fork = em.fork()
       const user = await fork.findOne(User, { id: req.user.sub })
       if (!user) return reply.status(401).send({ message: 'Unauthenticated.' })
+      if (req.body.enabled && !opts.emailEnabled) {
+        return reply.status(400).send({ message: 'Email is not enabled on this server.' })
+      }
       user.mfaEnabled = req.body.enabled
       if (!req.body.enabled) {
         user.mfaCode = undefined

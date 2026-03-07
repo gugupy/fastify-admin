@@ -62,6 +62,7 @@ export interface AdminConfig {
   name: string
   signup: boolean
   requireEmailVerification: boolean
+  emailEnabled: boolean
   securityEntities: string[]
   oauth: {
     google: boolean
@@ -101,6 +102,12 @@ export interface FastifyAdminOptions extends FastifyPluginOptions {
    * Set explicitly to override.
    */
   requireEmailVerification?: boolean
+  /**
+   * Whether email sending is available.
+   * When false, MFA and email verification are disabled regardless of other settings.
+   * Default: false.
+   */
+  emailEnabled?: boolean
   /** Resource configs keyed by entity collection name. */
   resources?: Record<string, ResourceConfig>
   /**

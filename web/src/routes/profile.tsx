@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { useRbac } from '../lib/rbac'
+import { getAdmin } from '../lib/FastifyAdmin'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -502,7 +503,7 @@ export default function ProfilePage() {
         </Section>
 
         {/* MFA */}
-        <Section
+        {getAdmin().emailEnabled && <Section
           title="Two-factor authentication"
           description="Add an extra layer of security. A 6-digit code will be emailed to you each time you sign in."
         >
@@ -575,7 +576,7 @@ export default function ProfilePage() {
               {mfaError && <FieldError>{mfaError}</FieldError>}
             </>
           )}
-        </Section>
+        </Section>}
       </div>
     </div>
   )

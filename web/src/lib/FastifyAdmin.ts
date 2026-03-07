@@ -16,6 +16,7 @@ type ApiAdminConfig = {
   name: string
   signup: boolean
   requireEmailVerification: boolean
+  emailEnabled: boolean
   securityEntities: string[]
   oauth: { google: boolean; github: boolean; microsoft: boolean }
   entities: Record<
@@ -50,6 +51,9 @@ export type FastifyAdminConfig = {
 
   /** Require email OTP on signup. Mirrors server setting. Default: false */
   requireEmailVerification?: boolean
+
+  /** Whether email sending is available on the server. Controls MFA and email verification. Default: false */
+  emailEnabled?: boolean
 
   /**
    * OAuth providers shown on login/signup pages.
@@ -86,6 +90,7 @@ export class FastifyAdmin {
   readonly icon?: IconSvgElement
   readonly signup: boolean
   readonly requireEmailVerification: boolean
+  readonly emailEnabled: boolean
   readonly oauth: Required<OAuthConfig>
   readonly securityEntities: string[]
 
@@ -96,6 +101,7 @@ export class FastifyAdmin {
     this.icon = config.icon
     this.signup = config.signup ?? true
     this.requireEmailVerification = config.requireEmailVerification ?? false
+    this.emailEnabled = config.emailEnabled ?? false
     this.oauth = {
       google: config.oauth?.google ?? false,
       github: config.oauth?.github ?? false,
@@ -155,6 +161,7 @@ export class FastifyAdmin {
       requireEmailVerification:
         localConfig?.requireEmailVerification ??
         apiConfig.requireEmailVerification,
+      emailEnabled: localConfig?.emailEnabled ?? apiConfig.emailEnabled,
       oauth: localConfig?.oauth ?? apiConfig.oauth,
       securityEntities:
         localConfig?.securityEntities ?? apiConfig.securityEntities,
