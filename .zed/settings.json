@@ -1,0 +1,12 @@
+{
+  "lsp": {
+    "eslint": {
+      "settings": {
+        // Monorepo: resolve ESLint config relative to each file's location
+        // so each package (fastify-admin/, web/) uses its own eslint.config.js
+        // instead of erroring with "multiple candidate TSConfigRootDirs"
+        "workingDirectory": { "mode": "location" }
+      }
+    }
+  }
+}

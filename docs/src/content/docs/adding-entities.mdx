@@ -1,0 +1,283 @@
+---
+title: Adding Entities
+description: Add your own data models and get a full CRUD UI automatically.
+---
+
+import { FileTree } from '@astrojs/starlight/components'
+
+An "entity" is a data model — like a `Post`, `Product`, `Order`, or `Customer`. When you add one, the admin panel automatically generates a full CRUD interface for it (list, view, create, edit, delete).
+
+---
+
+## The Simplest Case
+
+**Step 1 — Create a MikroORM entity**
+
+Add a file in `fastify-admin/src/entities/`:
+
+```ts
+// fastify-admin/src/entities/post.entity.ts
+import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
+
+@Entity()
+export class Post {
+  @PrimaryKey()
+  id!: number;
+
+  @Property()
+  title!: string;
+
+  @Property({ type: 'text' })
+  content!: string;
+
+  @Property({ default: false })
+  published = false;
+}
+```
+
+**Step 2 — Create a migration**
+
+```bash
+pnpm migration:create
+```
+
+That's it. Restart `pnpm dev` and you'll see "Post" in the sidebar with a full list/create/edit/delete UI.
+
+---
+
+## Customising How an Entity Looks
+
+```ts
+await app.register(fastifyAdmin, {
+  orm,
+  views: {
+    post: {
+      label: 'Blog Posts',
+      icon: 'Document',
+      list: {
+        columns: ['id', 'title', 'published'],
+      },
+      show: {
+        fields: ['id', 'title', 'content', 'published'],
+      },
+      edit: {
+        fields: ['title', 'content', 'published'],
+      },
+      add: {
+        fields: ['title', 'content'],
+      },
+    },
+  },
+});
+```
+
+### Disabling operations
+
+Set any permission to `false` to disable it entirely for all users:
+
+```ts
+views: {
+  order: {
+    permissions: {
+      create: false,
+      edit:   false,
+      delete: false,
+    },
+  },
+}
+```
+
+---
+
+## Using the EntityView Class
+
+Instead of an inline config object, you can create a dedicated file per entity by extending `EntityView`. This is the recommended approach for larger projects.
+
+<FileTree>
+- src/
+  - views/
+    - post.view.ts
+    - product.view.ts
+    - index.ts  Collects all views into a ViewRegistry
+</FileTree>
+
+**Create a view class:**
+
+```ts
+// fastify-admin/src/views/post.view.ts
+import { EntityView } from 'fastify-admin';
+
+export class PostView extends EntityView {
+  label = 'Blog Posts';
+  icon = 'Document';
+
+  listColumns() { return ['id', 'title', 'published']; }
+  showFields() { return ['id', 'title', 'content', 'published']; }
+  editFields() { return ['title', 'content', 'published']; }
+  addFields() { return ['title', 'content']; }
+}
+```
+
+**Register all views:**
+
+```ts
+// fastify-admin/src/views/index.ts
+import { ViewRegistry } from 'fastify-admin';
+import { PostView } from './post.view.js';
+
+export const views = new ViewRegistry()
+  .register('post', new PostView());
+```
+
+**Pass to the plugin:**
+
+```ts
+// dev.ts
+import { views } from './views/index.js';
+
+await app.register(fastifyAdmin, { orm, views });
+```
+
+---
+
+## Hiding an Entity from the Sidebar
+
+```ts
+post: {
+  sidebar: false,
+}
+```
+
+---
+
+## Field Types
+
+| MikroORM type | UI input |
+|---------------|----------|
+| `string` / `varchar` | Text input |
+| `text` | Textarea |
+| `boolean` | Checkbox |
+| `number` / `integer` | Number input |
+| `Date` / `datetime` | Date/time input |
+| Relation (`ManyToOne`, `ManyToMany`) | Select / multi-select |
+
+---
+
+## Relationships
+
+MikroORM relations work automatically. For example, a `Post` that belongs to a `Category`:
+
+```ts
+@ManyToOne(() => Category)
+category!: Category;
+```
+
+The edit form will show a dropdown of all categories.
+
+---
+
+## Row Actions
+
+Add custom buttons to every row in the list view. Each action gets the record's `id` and model name.
+
+```ts
+// fastify-admin/src/views/post.view.ts (server)
+import { EntityView } from 'fastify-admin'
+
+export class PostView extends EntityView {
+  rowActions() {
+    return [
+      {
+        label: 'Publish',
+        href: '/api/posts/:id/publish',  // :id is replaced at runtime
+      },
+    ]
+  }
+}
+```
+
+For client-side actions with custom logic, register them in `main.tsx` using `entityRegistry`:
+
+```ts
+// apps/web/src/main.tsx
+import { entityRegistry } from './lib/entityRegistry'
+
+entityRegistry.register('post', {
+  actions: [
+    {
+      label: 'Publish',
+      handler: async (id) => {
+        await fetch(`/api/posts/${id}/publish`, { method: 'POST' })
+      },
+      confirm: 'Publish this post?',
+    },
+  ],
+})
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `label` | `string` | Button text |
+| `handler` | `(id, model) => Promise<void>` | Called on click |
+| `confirm` | `string` | Optional confirmation prompt before running |
+| `permission` | `string` | Permission required to see the action. Defaults to `{model}.action.{label}` |
+
+---
+
+## Custom Cell Renderers
+
+Override how a specific field value is displayed in the list table:
+
+```ts
+// apps/web/src/main.tsx
+import { entityRegistry } from './lib/entityRegistry'
+
+entityRegistry.register('post', {
+  list: {
+    renderCell: (field, value) => {
+      if (field.name === 'published') {
+        return value ? '✅ Published' : '⬜ Draft'
+      }
+    },
+  },
+})
+```
+
+Return `undefined` to fall back to the default renderer for that field.
+
+Similarly, `renderField` customises the show page and `renderInput` customises the edit/create form:
+
+```ts
+entityRegistry.register('post', {
+  show: {
+    renderField: (field, value) => {
+      if (field.name === 'content') return <MarkdownPreview value={value} />
+    },
+  },
+  edit: {
+    renderInput: (field, value, onChange) => {
+      if (field.name === 'content') return <MarkdownEditor value={value} onChange={onChange} />
+    },
+  },
+})
+```
+
+---
+
+## Full Component Override
+
+Replace the entire list, show, or edit view with your own React component:
+
+```ts
+entityRegistry.register('post', {
+  list: {
+    component: ({ model, entity, records }) => (
+      <div>
+        {records.map(r => <div key={String(r.id)}>{String(r.title)}</div>)}
+      </div>
+    ),
+  },
+})
+```
+
+The component receives `model` (entity name string), `entity` (metadata), and `records` / `record` depending on the view type.

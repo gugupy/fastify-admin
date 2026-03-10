@@ -1,0 +1,95 @@
+---
+// Replaces Starlight's default <select> theme toggle with a three-button icon toggle
+---
+
+<div class="theme-toggle">
+  {[
+    { value: 'light', label: 'Light', icon: '☀' },
+    { value: 'auto', label: 'System', icon: '⊙' },
+    { value: 'dark', label: 'Dark', icon: '☽' },
+  ].map(({ value, label, icon }) => (
+    <button
+      class="theme-btn"
+      data-theme-value={value}
+      title={label}
+      aria-label={label}
+    >
+      {icon}
+    </button>
+  ))}
+</div>
+
+<style>
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--sl-color-gray-5);
+    padding: 2px;
+    background: var(--sl-color-bg);
+  }
+
+  .theme-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    color: var(--sl-color-gray-3);
+    transition: background 0.15s, color 0.15s;
+    padding: 0;
+  }
+
+  .theme-btn:hover {
+    color: var(--sl-color-white);
+  }
+
+  .theme-btn[data-active] {
+    background: var(--sl-color-white);
+    color: var(--sl-color-black);
+  }
+
+  :root[data-theme="dark"] .theme-btn[data-active] {
+    background: var(--sl-color-white);
+    color: var(--sl-color-black);
+  }
+</style>
+
+<script>
+  function getTheme(): string {
+    return typeof localStorage !== 'undefined'
+      ? (localStorage.getItem('starlight-theme') ?? 'auto')
+      : 'auto'
+  }
+
+  function setTheme(value: string) {
+    localStorage.setItem('starlight-theme', value)
+    document.documentElement.dataset.theme =
+      value === 'auto'
+        ? window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        : value
+    updateActive(value)
+  }
+
+  function updateActive(value: string) {
+    document.querySelectorAll<HTMLButtonElement>('.theme-btn').forEach((btn) => {
+      if (btn.dataset.themeValue === value) {
+        btn.setAttribute('data-active', '')
+      } else {
+        btn.removeAttribute('data-active')
+      }
+    })
+  }
+
+  updateActive(getTheme())
+
+  document.querySelectorAll<HTMLButtonElement>('.theme-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      setTheme(btn.dataset.themeValue ?? 'auto')
+    })
+  })
+</script>

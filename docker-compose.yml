@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-fastifyadmin}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: fastify-admin/Dockerfile
+    env_file:
+      - .env.local
+    volumes:
+      - ./fastify-admin:/app/fastify-admin
+      - ./types:/app/types
+      - /app/node_modules
+      - /app/fastify-admin/node_modules
+    ports:
+      - "${PORT:-3001}:${PORT:-3001}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    environment:
+     - API_URL=http://api:3001
+
+    volumes:
+      - ./web:/app/web
+      - /app/node_modules
+      - /app/web/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:

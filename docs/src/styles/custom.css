@@ -1,0 +1,57 @@
+@import "@fontsource-variable/jetbrains-mono";
+
+:root {
+  --sl-font: "JetBrains Mono Variable", monospace;
+  --sl-font-mono: "JetBrains Mono Variable", monospace;
+
+  /* Accent: near-black in light mode */
+  --sl-color-accent-low: oklch(0.922 0 0);
+  --sl-color-accent: oklch(0.205 0 0);
+  --sl-color-accent-high: oklch(0.145 0 0);
+
+  /* Grays */
+  --sl-color-white: oklch(1 0 0);
+  --sl-color-gray-1: oklch(0.985 0 0);
+  --sl-color-gray-2: oklch(0.97 0 0);
+  --sl-color-gray-3: oklch(0.922 0 0);
+  --sl-color-gray-4: oklch(0.708 0 0);
+  --sl-color-gray-5: oklch(0.556 0 0);
+  --sl-color-gray-6: oklch(0.269 0 0);
+  --sl-color-gray-7: oklch(0.205 0 0);
+  --sl-color-black: oklch(0.145 0 0);
+}
+
+:root[data-theme="dark"] {
+  /* Accent: near-white in dark mode */
+  --sl-color-accent-low: oklch(0.205 0 0);
+  --sl-color-accent: oklch(0.87 0 0);
+  --sl-color-accent-high: oklch(0.985 0 0);
+}
+
+/* Override Starlight's internal computed accent vars */
+:root,
+:root[data-theme="light"] {
+  --sl-color-text-accent: oklch(0.205 0 0);
+  --sl-color-bg-accent: oklch(0.145 0 0);
+}
+
+:root[data-theme="dark"] {
+  --sl-color-text-accent: oklch(0.985 0 0);
+  --sl-color-bg-accent: oklch(0.87 0 0);
+}
+
+/* Theme toggle & interactive elements */
+starlight-theme-select select:focus,
+starlight-theme-select select:focus-visible {
+  outline-color: var(--sl-color-text-accent);
+}
+
+/* Any remaining blue — catch-all for focus rings and highlights */
+:focus-visible {
+  outline-color: var(--sl-color-text-accent) !important;
+}
+
+/* Zero border radius everywhere */
+* {
+  border-radius: 0 !important;
+}

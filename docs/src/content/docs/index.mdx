@@ -1,0 +1,26 @@
+---
+title: fastify-admin
+description: A self-hosted admin panel for Fastify + MikroORM
+template: splash
+hero:
+  tagline: Drop it into your Fastify app and get a full admin panel — CRUD UI, auth, RBAC, and dark mode. Zero frontend work.
+  actions:
+    - text: Get Started
+      link: /getting-started
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/gugupy/fastify-admin
+      icon: external
+---
+
+import { LinkCard, CardGrid } from '@astrojs/starlight/components'
+
+## Explore the Docs
+
+<CardGrid>
+  <LinkCard title="Getting Started" href="/getting-started" description="Install the plugin and have your admin panel running in minutes." />
+  <LinkCard title="Configuration" href="/configuration" description="Plugin options, environment variables, and database setup." />
+  <LinkCard title="Guides" href="/adding-entities" description="Add entities, set up RBAC, theming, CLI, testing, and deployment." />
+  <LinkCard title="Reference" href="/api-reference" description="API reference and contributing guide." />
+</CardGrid>

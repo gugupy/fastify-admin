@@ -1,0 +1,126 @@
+---
+title: Project Structure
+description: What every folder and file does.
+---
+
+import { FileTree } from '@astrojs/starlight/components'
+
+Here is what every folder and file does.
+
+---
+
+## Top-Level Layout
+
+<FileTree>
+- fastify-admin/  Backend: API server + npm package
+- web/  Frontend: React admin UI
+- types/  Shared types used by both backend and frontend
+- docs/  You are here
+- docker-compose.yml  Runs PostgreSQL + API + Web in Docker
+- package.json  Root scripts (dev, build, release, etc.)
+- pnpm-workspace.yaml  Tells pnpm about the three sub-projects
+</FileTree>
+
+---
+
+## `fastify-admin/` — The Backend
+
+This folder does two things:
+1. **Dev server** — when developing, it boots a real Fastify HTTP server
+2. **npm package** — when published, other projects can install and use it
+
+<FileTree>
+- fastify-admin/
+  - src/
+    - dev.ts  Entry point for development (boots Fastify on port 3001)
+    - plugin.ts  The Fastify plugin (what npm users register in their app)
+    - index.ts  What gets exported when someone does `import from 'fastify-admin'`
+    - mikro-orm.config.ts  Database connection settings (reads from environment variables)
+    - db.ts  Helper that initialises the database connection
+    - entities/  Built-in database models
+      - user.entity.ts  User (login, roles, OAuth, MFA)
+      - role.entity.ts  Role (e.g. Admin, Viewer)
+      - permission.entity.ts  Permission (e.g. post.create, post.delete)
+    - routes/
+      - auth.ts  Login, logout, signup, MFA, OAuth endpoints
+      - entities.ts  Auto-generated CRUD endpoints for every entity
+    - lib/
+      - password.ts  Password hashing helpers
+      - mailer.ts  Email sending (for MFA codes, signup verification)
+    - registry.ts  Scans MikroORM for entities and builds the entity list
+    - seedRbac.ts  Creates default roles and permissions on first run
+    - EntityView.ts  Base class you extend to configure an entity in the UI
+    - ViewRegistry.ts  User-facing registry for collecting EntityView files
+    - types.ts  TypeScript types for plugin options and config
+    - views/  One EntityView file per entity (your customisations)
+      - user.view.ts  EntityView for the built-in User entity
+      - role.view.ts  EntityView for the built-in Role entity
+      - permission.view.ts  EntityView for the built-in Permission entity
+      - index.ts  Creates and exports the ViewRegistry
+    - migrations/  Database migrations (one file per schema change)
+    - seeders/  Optional data seeders for testing
+    - cli/
+      - create-admin.ts  `pnpm create-admin` command
+      - reset-password.ts  `pnpm reset-password` command
+  - Dockerfile  Docker image for the API container
+</FileTree>
+
+### The difference between `dev.ts` and `plugin.ts`
+
+- **`dev.ts`** — used only when developing this project. It starts a full server so you can work on the admin panel itself.
+- **`plugin.ts`** — used by everyone else who installs this as an npm package. They register it in their own Fastify app.
+
+---
+
+## `web/` — The Frontend
+
+This is the React application you see in the browser.
+
+<FileTree>
+- web/
+  - src/
+    - routes/  One file per page
+      - __root.tsx  Root layout (sidebar + main content area)
+      - index.tsx  Dashboard / home page
+      - login.tsx  Login page
+      - signup.tsx  Signup page
+      - verify-mfa.tsx  MFA code verification page
+      - profile.tsx  User profile & settings
+      - $model/
+        - list.tsx  Table view for any entity (e.g. /post/list)
+        - $id/
+          - show.tsx  Detail view (e.g. /post/1/show)
+          - edit.tsx  Edit form (e.g. /post/1/edit or /post/new/edit)
+    - components/
+      - Sidebar.tsx  The left navigation panel
+      - ThemeToggle.tsx  Light / dark / system theme switcher
+      - icons.tsx  SVG icon components
+    - lib/
+      - FastifyAdmin.ts  Reads the admin config from /api/admin-config
+      - entityRegistry.ts  Maps entity names to UI config (icons, labels, etc.)
+      - rbac.ts  useRbac() hook — checks what the current user can do
+      - theme.tsx  Theme context (light/dark/system)
+    - types/
+      - entity.ts  Re-exports shared types from the `types` package
+  - Dockerfile  Docker image for the web container
+</FileTree>
+
+---
+
+## `types/` — Shared Types
+
+Contains TypeScript types that are used by both the backend (`fastify-admin`) and the frontend (`web`). This prevents them from getting out of sync.
+
+The main types are:
+- `EntityMeta` — the shape of an entity as seen by the frontend (name, fields)
+- `Field` — a single field on an entity (name, type)
+
+---
+
+## Configuration Files at the Root
+
+| File | Purpose |
+|------|---------|
+| `package.json` | All the commands you can run (`pnpm dev`, `pnpm bundle`, etc.) |
+| `pnpm-workspace.yaml` | Registers `web`, `fastify-admin`, and `types` as workspace packages |
+| `docker-compose.yml` | Defines the `postgres`, `api`, and `web` Docker services |
