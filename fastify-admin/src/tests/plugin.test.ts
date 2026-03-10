@@ -80,7 +80,10 @@ describe('plugin views option', () => {
 describe('plugin menu option', () => {
   it('returns an empty menu array when no menu is registered', async () => {
     const app = await buildApp()
-    const res = await app.app.inject({ method: 'GET', url: '/api/admin-config' })
+    const res = await app.app.inject({
+      method: 'GET',
+      url: '/api/admin-config',
+    })
     expect(res.json().menu).toEqual([])
     await teardown(app)
   })
@@ -91,27 +94,44 @@ describe('plugin menu option', () => {
       { name: 'posts', label: 'Posts', entity: 'post', parent: 'content' },
     ]
     const app = await buildApp({ menu })
-    const res = await app.app.inject({ method: 'GET', url: '/api/admin-config' })
+    const res = await app.app.inject({
+      method: 'GET',
+      url: '/api/admin-config',
+    })
     expect(res.json().menu).toEqual(menu)
     await teardown(app)
   })
 
   it('loadSecurity prepends a Security group with all securityEntities', async () => {
     const app = await buildApp({ loadSecurity: true })
-    const res = await app.app.inject({ method: 'GET', url: '/api/admin-config' })
+    const res = await app.app.inject({
+      method: 'GET',
+      url: '/api/admin-config',
+    })
     const menu: MenuItem[] = res.json().menu
     // Security group item comes first
-    expect(menu[0]).toMatchObject({ name: 'security', label: 'Security', icon: 'security' })
+    expect(menu[0]).toMatchObject({
+      name: 'security',
+      label: 'Security',
+      icon: 'security',
+    })
     // Each default security entity appears as a child of 'security'
-    const childNames = menu.filter((i) => i.parent === 'security').map((i) => i.name)
-    expect(childNames).toEqual(expect.arrayContaining(['user', 'role', 'permission']))
+    const childNames = menu
+      .filter((i) => i.parent === 'security')
+      .map((i) => i.name)
+    expect(childNames).toEqual(
+      expect.arrayContaining(['user', 'role', 'permission']),
+    )
     await teardown(app)
   })
 
   it('loadSecurity items appear before custom menu items', async () => {
     const menu: MenuItem[] = [{ name: 'content', label: 'Content' }]
     const app = await buildApp({ menu, loadSecurity: true })
-    const res = await app.app.inject({ method: 'GET', url: '/api/admin-config' })
+    const res = await app.app.inject({
+      method: 'GET',
+      url: '/api/admin-config',
+    })
     const items: MenuItem[] = res.json().menu
     const secIdx = items.findIndex((i) => i.name === 'security')
     const contentIdx = items.findIndex((i) => i.name === 'content')

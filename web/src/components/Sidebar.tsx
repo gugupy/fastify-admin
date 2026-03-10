@@ -113,7 +113,8 @@ function GroupFlyout({
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const isActive = children.some(
-    ({ model }) => pathname.startsWith(`/${model}/`) || pathname === `/${model}`,
+    ({ model }) =>
+      pathname.startsWith(`/${model}/`) || pathname === `/${model}`,
   )
 
   function scheduleClose() {
@@ -160,7 +161,11 @@ function GroupFlyout({
               ].join(' ')}
             >
               <span className="shrink-0 opacity-70">
-                {Icon ? <Icon size={14} /> : <AdminIcon name="entity" size={14} />}
+                {Icon ? (
+                  <Icon size={14} />
+                ) : (
+                  <AdminIcon name="entity" size={14} />
+                )}
               </span>
               {childLabel}
             </Link>
@@ -263,10 +268,16 @@ function MenuGroup({
       <div className="mb-1">
         <GroupFlyout
           label={groupLabel}
-          triggerIcon={Icon ? <Icon size={14} /> : <AdminIcon name="entity" size={14} />}
+          triggerIcon={
+            Icon ? <Icon size={14} /> : <AdminIcon name="entity" size={14} />
+          }
           children={children.map((child) => {
             const model = child.entity ?? child.name
-            return { model, label: child.label ?? capitalize(model), icon: child.iconComponent }
+            return {
+              model,
+              label: child.label ?? capitalize(model),
+              icon: child.iconComponent,
+            }
           })}
           pathname={pathname}
         />
@@ -438,7 +449,12 @@ export function Sidebar() {
           </div>
 
           {/* Nav */}
-          <nav className={['flex-1 overflow-y-auto py-3 flex flex-col', collapsed ? 'px-0 gap-1' : 'px-2 gap-0.5'].join(' ')}>
+          <nav
+            className={[
+              'flex-1 overflow-y-auto py-3 flex flex-col',
+              collapsed ? 'px-0 gap-1' : 'px-2 gap-0.5',
+            ].join(' ')}
+          >
             {/* ── System (security) items — always rendered first ────────── */}
             {systemItems.length > 0 &&
               (collapsed ? (

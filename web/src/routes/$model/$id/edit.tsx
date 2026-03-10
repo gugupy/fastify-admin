@@ -65,7 +65,9 @@ function EditComponent() {
   }
 
   if (!entity) {
-    return <div className="p-6 text-destructive">Entity "{model}" not found.</div>
+    return (
+      <div className="p-6 text-destructive">Entity "{model}" not found.</div>
+    )
   }
 
   if (config.edit?.component) {
@@ -151,7 +153,9 @@ function EditComponent() {
           </div>
         ))}
 
-        {error && <div className="px-4 py-3 text-sm text-destructive">{error}</div>}
+        {error && (
+          <div className="px-4 py-3 text-sm text-destructive">{error}</div>
+        )}
 
         <div className="flex justify-end gap-2 px-4 py-3">
           <Link to="/$model/list" params={{ model }}>

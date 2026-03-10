@@ -156,9 +156,9 @@ export class FastifyAdmin {
       (apiConfig.menu ?? []).map((item) => ({
         ...item,
         iconComponent: item.icon
-          ? (item.icon === 'security'
-              ? iconRegistry.get('security')
-              : iconRegistry.getEntityIcon(item.icon))
+          ? item.icon === 'security'
+            ? iconRegistry.get('security')
+            : iconRegistry.getEntityIcon(item.icon)
           : undefined,
       })),
     )
