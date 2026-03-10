@@ -149,7 +149,7 @@ function SystemFlyout({
                 'flex items-center gap-2 px-3 py-1.5 text-sm transition-colors',
                 active
                   ? 'bg-muted font-medium text-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md',
               ].join(' ')}
             >
               <span className="shrink-0 opacity-70">
@@ -319,7 +319,7 @@ export function Sidebar() {
               to="/"
               className="flex items-center gap-2.5 text-foreground min-w-0"
             >
-              <div className="w-7 h-7 bg-foreground text-background flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-md bg-foreground text-background flex items-center justify-center shrink-0">
                 {AppIcon ? <AppIcon size={14} /> : <FastifyAdminIcon />}
               </div>
               {!collapsed && (
@@ -393,12 +393,14 @@ export function Sidebar() {
               <DropdownMenuTrigger asChild>
                 <button
                   className={[
-                    'w-full flex items-center  transition-colors hover:bg-muted/50 outline-none',
+                    'w-full flex items-center  transition-colors hover:bg-muted/50 outline-none rounded-md',
                     collapsed ? 'justify-center p-1' : 'gap-2 px-1 py-1',
                   ].join(' ')}
                 >
-                  <Avatar className="after:rounded-none rounded-none">
-                    <AvatarFallback>{initials}</AvatarFallback>
+                  <Avatar className="rounded-md after:rounded-md">
+                    <AvatarFallback className="rounded-md">
+                      {initials}
+                    </AvatarFallback>
                   </Avatar>
 
                   {!collapsed && (
@@ -451,7 +453,7 @@ export function Sidebar() {
             <button
               onClick={toggleCollapsed}
               aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className="absolute top-11 -right-3 z-10 w-6 h-6  border bg-background shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute rounded-md top-11 -right-3 z-10 w-6 h-6  border bg-background shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
             >
               <PanelCollapseIcon collapsed={collapsed} />
             </button>

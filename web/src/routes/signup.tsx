@@ -310,7 +310,7 @@ function SignupPage() {
                       </span>
                     )}
                     {usernameStatus === 'available' && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-500">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-primary">
                         ✓
                       </span>
                     )}

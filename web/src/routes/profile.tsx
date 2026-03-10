@@ -44,10 +44,10 @@ function Section({
 function StatusBadge({ on }: { on: boolean }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5  ${on ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400' : 'bg-muted text-muted-foreground'}`}
+      className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5  ${on ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}
     >
       <span
-        className={`w-1.5 h-1.5  ${on ? 'bg-green-500' : 'bg-muted-foreground/50'}`}
+        className={`w-1.5 h-1.5  ${on ? 'bg-primary' : 'bg-muted-foreground/50'}`}
       />
       {on ? 'Enabled' : 'Disabled'}
     </span>
@@ -368,7 +368,7 @@ export default function ProfilePage() {
                   {profileSaving ? 'Saving…' : 'Save changes'}
                 </Button>
                 {profileSuccess && (
-                  <span className="text-xs text-green-600">Saved!</span>
+                  <span className="text-xs text-primary">Saved!</span>
                 )}
               </div>
             )}
@@ -504,7 +504,7 @@ export default function ProfilePage() {
                       : 'Set password'}
                 </Button>
                 {passwordSuccess && (
-                  <span className="text-xs text-green-600">
+                  <span className="text-xs text-primary">
                     Password updated!
                   </span>
                 )}

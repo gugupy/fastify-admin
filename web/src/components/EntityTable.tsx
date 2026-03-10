@@ -147,7 +147,7 @@ export function EntityTable({
           <button
             onClick={() => setConfirmDelete('bulk')}
             disabled={bulkDeleting}
-            className="px-4 py-2 bg-red-600 text-white text-sm hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 disabled:opacity-50"
+            className="px-4 py-2 bg-destructive text-destructive-foreground text-sm hover:bg-destructive/90 disabled:opacity-50"
           >
             {bulkDeleting ? '…' : `Delete ${selected.size} selected`}
           </button>
@@ -218,7 +218,7 @@ export function EntityTable({
                       <div className="flex gap-2">
                         {canShow && (
                           <Link to="/$model/$id/show" params={{ model, id }}>
-                            <button className="px-2 py-1 border border-blue-200 text-xs text-blue-500 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950 flex gap-2">
+                            <button className="px-2 py-1 border border-border text-xs text-muted-foreground hover:bg-muted hover:text-foreground flex gap-2">
                               <AdminIcon name="view" size={14} />
                               <span>View</span>
                             </button>
@@ -226,7 +226,7 @@ export function EntityTable({
                         )}
                         {canEdit && (
                           <Link to="/$model/$id/edit" params={{ model, id }}>
-                            <button className="px-2 py-1 border text-xs text-amber-600 hover:bg-amber-50 border-amber-200 dark:text-amber-400 dark:hover:bg-amber-950 dark:border-amber-800 flex gap-2">
+                            <button className="px-2 py-1 border border-border text-xs text-foreground hover:bg-muted flex gap-2">
                               <AdminIcon name="edit" size={14} />
                               <span>Edit</span>
                             </button>
@@ -259,7 +259,7 @@ export function EntityTable({
                           <button
                             onClick={() => setConfirmDelete({ id })}
                             disabled={deleting === id}
-                            className="px-2 py-1 border border-red-200 text-red-600 text-xs hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950 disabled:opacity-50 flex gap-2"
+                            className="px-2 py-1 border border-destructive/30 text-destructive text-xs hover:bg-destructive/10 disabled:opacity-50 flex gap-2"
                           >
                             {deleting === id ? (
                               '…'
