@@ -1,4 +1,4 @@
-import { EntityManager, EntityClass, FindOneOptions } from '@mikro-orm/core'
+import { EntityManager, EntityClass } from '@mikro-orm/core'
 
 export class EntityInterface<T extends object> {
   private em: EntityManager

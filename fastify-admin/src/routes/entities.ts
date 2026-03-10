@@ -2,7 +2,6 @@ import { EntityManager } from '@mikro-orm/core'
 import { FastifyInstance } from 'fastify'
 import { EntityRegistry } from '../registry.js'
 import { EntityInterface } from '../entityInterface.js'
-import { InternalEntity } from '../types.js'
 
 export async function registerEntityRoutes(
   app: FastifyInstance,
