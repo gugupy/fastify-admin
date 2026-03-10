@@ -4,6 +4,8 @@ export class UserView extends EntityView {
   sidebar = false
   icon = 'User03'
 
+  relatedViews = ['role']
+
   listColumns = ['id', 'fullName', 'email']
   showFields = ['id', 'username', 'fullName', 'email', 'roles.name']
   editFields = ['fullName', 'roles.name']

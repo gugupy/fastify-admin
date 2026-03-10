@@ -101,7 +101,9 @@ function ListComponent() {
   const config = entityRegistry.get(model)
 
   if (!entity) {
-    return <div className="p-6 text-destructive">Entity "{model}" not found.</div>
+    return (
+      <div className="p-6 text-destructive">Entity "{model}" not found.</div>
+    )
   }
 
   if (config.list?.component) {

@@ -25,6 +25,13 @@ await app.register(fastifyAdmin, {
   orm,
   requireEmailVerification: false,
   views,
+  menu: [
+    { name: 'posts', entity: 'post', label: 'Posts', icon: 'FileText' },
+    { name: 'content', label: 'Content' },
+    { name: 'categories', entity: 'category', parent: 'content' },
+    { name: 'tags', entity: 'tag', parent: 'content' },
+  ],
+  loadSecurity: true,
 })
 
 const port = parseInt(process.env.ADMIN_PORT ?? '3001')

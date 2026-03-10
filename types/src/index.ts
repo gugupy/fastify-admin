@@ -15,6 +15,7 @@ export type Field = {
 export type EntityMeta = {
   name: string
   fields: Field[]
+  relations: string[]
 }
 
 /** A single record count entry as returned by GET /api/dashboard */
@@ -76,6 +77,24 @@ export type EntityConfig = {
   actions?: RowAction[]
 }
 
+/**
+ * A menu item registered server-side and served via /api/admin-config.
+ * Only registered items appear in the sidebar — nothing is auto-detected.
+ *
+ * - name   — unique key; used as the item identifier and for parent references
+ * - label  — display text shown in the sidebar
+ * - icon   — string icon key resolved client-side via iconRegistry
+ * - parent — name of a parent item to nest this item under
+ * - entity — entity model name this item links to (routes to /$entity/list)
+ */
+export type MenuItem = {
+  name: string
+  label?: string
+  icon?: string
+  parent?: string
+  entity?: string
+}
+
 /** Full shape of the /api/admin-config response */
 export type AdminConfig = {
   name: string
@@ -89,4 +108,6 @@ export type AdminConfig = {
     microsoft: boolean
   }
   entities: Record<string, EntityConfig>
+  /** Registered menu items. When present, the sidebar renders only these items. */
+  menu: MenuItem[]
 }

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { renderField } from '../../../lib/entityFieldMapper'
-import { PRIMITIVE_TYPES } from '../../../lib/entityFieldUtils'
 import { entityRegistry, perm } from '../../../lib/entityRegistry'
 import { useRbac } from '../../../lib/rbac'
 import type { EntityMeta } from '../../../types/entity'
@@ -30,9 +29,7 @@ function ShowComponent() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('details')
 
-  // Reset the active tab to "details" whenever the model or record ID changes.
-  // This prevents a relation tab selected for a previous entity or record from
-  // remaining active after navigating to a different model or ID.
+  // Reset to "details" tab when navigating to a different record or model.
   useEffect(() => {
     setActiveTab('details')
   }, [model, id])
@@ -50,36 +47,35 @@ function ShowComponent() {
 
   const showConfig = config.show ?? {}
   const allFields = entity.fields.filter((f) => f.name !== 'password')
+
+  // Use showConfig.fields when configured; otherwise show all scalar fields
+  // (relation fields are excluded to keep the details panel clean).
   const fields = showConfig.fields
     ? (showConfig.fields
         .map((name) => allFields.find((f) => f.name === name))
         .filter(Boolean) as typeof allFields)
-    : allFields
+    : allFields.filter((f) => !entity.relations.includes(f.name))
 
-  // Build relation tabs — either from explicit relatedViews config or auto-detected array fields
+  // Relation tabs are only shown when relatedViews is explicitly configured.
   const explicitRelatedViews = showConfig.relatedViews
-  const relationTabs = entity.fields
-    .filter((f) => {
-      if (PRIMITIVE_TYPES.has(f.type)) return false
-      if (!Array.isArray(record[f.name])) return false
-      const relatedModel = f.type.replace('[]', '').toLowerCase()
-      if (explicitRelatedViews)
-        return explicitRelatedViews.includes(relatedModel)
-      const p = perm(entityRegistry.get(relatedModel), relatedModel, 'list')
-      return p !== false && can(p)
-    })
-    .map((f) => {
-      const relatedModel = f.type.replace('[]', '').toLowerCase()
-      const relatedEntityMeta = entities.find((e) => e.name === relatedModel)
-      return {
-        field: f,
-        relatedModel,
-        relatedEntityMeta,
-        records: record[f.name] as Record<string, unknown>[],
-      }
-    })
 
-  console.log(relationTabs)
+  const relationTabs = (explicitRelatedViews ?? [])
+    .map((relatedModel) => {
+      // Match the field by its entity type (e.g. type 'Role[]' → 'role').
+      const field = entity.fields.find(
+        (f) => f.type.replace('[]', '').toLowerCase() === relatedModel,
+      )
+      const relatedEntityMeta = entities.find((e) => e.name === relatedModel)
+      // The field name (e.g. 'roles') may differ from the model name ('role'),
+      // so use the field name to look up data in the API response.
+      const fieldName = field?.name ?? relatedModel
+      const records = Array.isArray(record[fieldName])
+        ? (record[fieldName] as Record<string, unknown>[])
+        : []
+      return { relatedModel, field, relatedEntityMeta, records }
+    })
+    // Skip any relatedViews entry that has no matching field on this entity.
+    .filter((tab) => tab.field !== undefined)
 
   const hasTabs = relationTabs.length > 0
 
@@ -122,15 +118,15 @@ function ShowComponent() {
           </button>
           {relationTabs.map((tab) => (
             <button
-              key={tab.field.name}
-              onClick={() => setActiveTab(tab.field.name)}
+              key={tab.relatedModel}
+              onClick={() => setActiveTab(tab.relatedModel)}
               className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px capitalize transition-colors ${
-                activeTab === tab.field.name
+                activeTab === tab.relatedModel
                   ? 'border-foreground text-foreground'
                   : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
-              {tab.field.name}
+              {tab.relatedModel}
               {tab.records.length > 0 && (
                 <span className="ml-2 text-xs bg-muted px-1.5 py-0.5">
                   {tab.records.length}
@@ -159,11 +155,11 @@ function ShowComponent() {
       )}
 
       {relationTabs.map((tab) => {
-        if (activeTab !== tab.field.name) return null
+        if (activeTab !== tab.relatedModel) return null
         if (!tab.relatedEntityMeta) return null
         const relatedConfig = entityRegistry.get(tab.relatedModel)
         return (
-          <div key={tab.field.name} className="pt-4">
+          <div key={tab.relatedModel} className="pt-4">
             <EntityTable
               model={tab.relatedModel}
               entity={tab.relatedEntityMeta}

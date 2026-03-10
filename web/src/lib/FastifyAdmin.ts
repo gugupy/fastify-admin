@@ -2,6 +2,7 @@ import { entityRegistry } from './entityRegistry'
 import type { EntityConfig } from './entityRegistry'
 import { iconRegistry } from './iconRegistry'
 import type { AdminIconComponent, AdminIcons } from './iconRegistry'
+import { menuRegistry } from './menuRegistry'
 import type { AdminConfig } from '@fastify-admin/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -148,6 +149,19 @@ export class FastifyAdmin {
     for (const secName of admin.securityEntities) {
       entityRegistry.register(secName, { sidebar: false })
     }
+
+    // Populate menu registry from API config — resolving icon strings to components.
+    // 'security' is a built-in AdminIconKey slot; all others go through entityIconMap.
+    menuRegistry.populate(
+      (apiConfig.menu ?? []).map((item) => ({
+        ...item,
+        iconComponent: item.icon
+          ? (item.icon === 'security'
+              ? iconRegistry.get('security')
+              : iconRegistry.getEntityIcon(item.icon))
+          : undefined,
+      })),
+    )
 
     // Apply local overrides on top (e.g. custom React icon components)
     if (localConfig?.resources) {

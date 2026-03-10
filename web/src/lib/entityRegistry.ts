@@ -146,4 +146,8 @@ export const entityRegistry = {
   has(model: string): boolean {
     return registry.has(model)
   },
+  /** All registered entity names, in insertion order. */
+  names(): string[] {
+    return [...registry.keys()]
+  },
 }

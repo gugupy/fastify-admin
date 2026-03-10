@@ -3,12 +3,15 @@ import { MikroORM } from '@mikro-orm/postgresql'
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection'
 import { User, Role, Permission } from '../index.js'
 import { fastifyAdmin } from '../plugin.js'
+import type { MenuItem } from '../types.js'
 
 export async function buildApp(
   opts: {
     requireEmailVerification?: boolean
     mfaEnabled?: boolean
     views?: Record<string, any>
+    menu?: MenuItem[]
+    loadSecurity?: boolean
   } = {},
 ) {
   const orm = await MikroORM.init({
@@ -32,6 +35,8 @@ export async function buildApp(
     requireEmailVerification: opts.requireEmailVerification ?? false,
     mfaEnabled: opts.mfaEnabled ?? false,
     views: opts.views ?? {},
+    menu: opts.menu,
+    loadSecurity: opts.loadSecurity,
   })
 
   await app.ready()

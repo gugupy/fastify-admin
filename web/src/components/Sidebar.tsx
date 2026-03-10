@@ -4,7 +4,8 @@ import { createPortal } from 'react-dom'
 import { ThemeToggle } from './ThemeToggle'
 import { useRbac } from '../lib/rbac'
 import { entityRegistry, perm } from '../lib/entityRegistry'
-import type { EntityMeta } from '../types/entity'
+import { menuRegistry } from '../lib/menuRegistry'
+import type { MenuItem } from '../lib/menuRegistry'
 import { FastifyAdminIcon } from './icons'
 import { getAdmin } from '../lib/FastifyAdmin'
 import {
@@ -85,15 +86,25 @@ function capitalize(str: string) {
 }
 
 type NavItem = {
-  entity: EntityMeta
+  name: string
   config: ReturnType<typeof entityRegistry.get>
 }
 
-function SystemFlyout({
-  items,
+type FlyoutChild = {
+  model: string
+  label: string
+  icon?: ReturnType<typeof entityRegistry.get>['icon']
+}
+
+function GroupFlyout({
+  label,
+  triggerIcon,
+  children,
   pathname,
 }: {
-  items: NavItem[]
+  label: string
+  triggerIcon: React.ReactNode
+  children: FlyoutChild[]
   pathname: string
 }) {
   const [open, setOpen] = useState(false)
@@ -101,9 +112,8 @@ function SystemFlyout({
   const triggerRef = useRef<HTMLDivElement>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const isActive = items.some(
-    ({ entity }) =>
-      pathname.startsWith(`/${entity.name}/`) || pathname === `/${entity.name}`,
+  const isActive = children.some(
+    ({ model }) => pathname.startsWith(`/${model}/`) || pathname === `/${model}`,
   )
 
   function scheduleClose() {
@@ -132,19 +142,16 @@ function SystemFlyout({
         onMouseLeave={scheduleClose}
       >
         <p className="px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground font-medium select-none">
-          Security
+          {label}
         </p>
-        {items.map(({ entity, config }) => {
+        {children.map(({ model, label: childLabel, icon: Icon }) => {
           const active =
-            pathname.startsWith(`/${entity.name}/`) ||
-            pathname === `/${entity.name}`
-          const Icon = config.icon
-          const label = config.label ?? capitalize(entity.name)
+            pathname.startsWith(`/${model}/`) || pathname === `/${model}`
           return (
             <Link
-              key={entity.name}
+              key={model}
               to="/$model/list"
-              params={{ model: entity.name }}
+              params={{ model }}
               className={[
                 'flex items-center gap-2 px-3 py-1.5 text-sm transition-colors',
                 active
@@ -153,13 +160,9 @@ function SystemFlyout({
               ].join(' ')}
             >
               <span className="shrink-0 opacity-70">
-                {Icon ? (
-                  <Icon size={14} />
-                ) : (
-                  <AdminIcon name="entity" size={14} />
-                )}
+                {Icon ? <Icon size={14} /> : <AdminIcon name="entity" size={14} />}
               </span>
-              {label}
+              {childLabel}
             </Link>
           )
         })}
@@ -181,9 +184,9 @@ function SystemFlyout({
             ? 'bg-muted text-foreground'
             : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
         ].join(' ')}
-        aria-label="Security"
+        aria-label={label}
       >
-        <AdminIcon name="security" size={14} />
+        {triggerIcon}
       </button>
       {flyout}
     </div>
@@ -191,15 +194,14 @@ function SystemFlyout({
 }
 
 function NavLink({
-  entity,
+  name,
   config,
   pathname,
   collapsed,
 }: NavItem & { pathname: string; collapsed: boolean }) {
-  const active =
-    pathname.startsWith(`/${entity.name}/`) || pathname === `/${entity.name}`
+  const active = pathname.startsWith(`/${name}/`) || pathname === `/${name}`
   const Icon = config.icon
-  const label = config.label ?? capitalize(entity.name)
+  const label = config.label ?? capitalize(name)
 
   const linkClass = [
     'flex items-center  text-sm transition-colors',
@@ -210,11 +212,7 @@ function NavLink({
   ].join(' ')
 
   const inner = (
-    <Link
-      to="/$model/list"
-      params={{ model: entity.name }}
-      className={linkClass}
-    >
+    <Link to="/$model/list" params={{ model: name }} className={linkClass}>
       <span className="shrink-0 opacity-70">
         {Icon ? <Icon size={14} /> : <AdminIcon name="entity" size={14} />}
       </span>
@@ -225,10 +223,122 @@ function NavLink({
   if (!collapsed) return inner
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>{inner}</TooltipTrigger>
-      <TooltipContent side="right">{label}</TooltipContent>
-    </Tooltip>
+    <div className="mb-1">
+      <Tooltip>
+        <TooltipTrigger asChild>{inner}</TooltipTrigger>
+        <TooltipContent side="right">{label}</TooltipContent>
+      </Tooltip>
+      <div className="mx-auto my-1.5 w-6 border-t border-border" />
+    </div>
+  )
+}
+
+function MenuGroup({
+  item,
+  children,
+  pathname,
+  collapsed,
+}: {
+  item: MenuItem
+  children: MenuItem[]
+  pathname: string
+  collapsed: boolean
+}) {
+  const groupActive = children.some((child) => {
+    const m = child.entity ?? child.name
+    return pathname.startsWith(`/${m}/`) || pathname === `/${m}`
+  })
+  const [open, setOpen] = useState(groupActive)
+
+  // Re-open automatically when navigating into a child route.
+  useEffect(() => {
+    if (groupActive) setOpen(true)
+  }, [groupActive])
+
+  const Icon = item.iconComponent
+  const groupLabel = item.label ?? capitalize(item.name)
+
+  if (collapsed) {
+    return (
+      <div className="mb-1">
+        <GroupFlyout
+          label={groupLabel}
+          triggerIcon={Icon ? <Icon size={14} /> : <AdminIcon name="entity" size={14} />}
+          children={children.map((child) => {
+            const model = child.entity ?? child.name
+            return { model, label: child.label ?? capitalize(model), icon: child.iconComponent }
+          })}
+          pathname={pathname}
+        />
+        <div className="mx-auto my-1.5 w-6 border-t border-border" />
+      </div>
+    )
+  }
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen} className="my-1">
+      <CollapsibleTrigger className="w-full flex items-center justify-between px-2 py-1 text-[10px] uppercase tracking-widest text-muted-foreground font-medium hover:text-foreground transition-colors select-none">
+        <span className="flex items-center gap-1.5">
+          {Icon ? <Icon size={14} /> : <AdminIcon name="entity" size={14} />}
+          {item.label ?? capitalize(item.name)}
+        </span>
+        <ChevronIcon open={open} />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="flex flex-col gap-0.5 mt-0.5 ml-5">
+        {children.map((child) => (
+          <MenuNavLink
+            key={child.name}
+            item={child}
+            pathname={pathname}
+            collapsed={collapsed}
+          />
+        ))}
+      </CollapsibleContent>
+    </Collapsible>
+  )
+}
+
+function MenuNavLink({
+  item,
+  pathname,
+  collapsed,
+}: {
+  item: MenuItem
+  pathname: string
+  collapsed: boolean
+}) {
+  const model = item.entity ?? item.name
+  const active = pathname.startsWith(`/${model}/`) || pathname === `/${model}`
+  const Icon = item.iconComponent
+  const label = item.label ?? capitalize(model)
+
+  const linkClass = [
+    'flex items-center text-sm transition-colors',
+    collapsed ? 'justify-center w-9 h-9 mx-auto' : 'gap-2 px-2 py-1.5',
+    active
+      ? 'bg-muted font-medium text-foreground'
+      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+  ].join(' ')
+
+  const inner = (
+    <Link to="/$model/list" params={{ model }} className={linkClass}>
+      <span className="shrink-0 opacity-70">
+        {Icon ? <Icon size={14} /> : <AdminIcon name="entity" size={14} />}
+      </span>
+      {!collapsed && label}
+    </Link>
+  )
+
+  if (!collapsed) return inner
+
+  return (
+    <div className="mb-1">
+      <Tooltip>
+        <TooltipTrigger asChild>{inner}</TooltipTrigger>
+        <TooltipContent side="right">{label}</TooltipContent>
+      </Tooltip>
+      <div className="mx-auto my-1.5 w-6 border-t border-border" />
+    </div>
   )
 }
 
@@ -238,8 +348,9 @@ export function Sidebar() {
   const AppIcon = admin.icon
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const [entities, setEntities] = useState<EntityMeta[]>([])
   const [systemOpen, setSystemOpen] = useState(false)
+  // Capture menu items once at mount — populated by FastifyAdmin.initFromApi before render.
+  const [registeredMenu] = useState(() => menuRegistry.getAll())
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem('sidebar-collapsed') === 'true'
@@ -247,13 +358,6 @@ export function Sidebar() {
       return false
     }
   })
-
-  useEffect(() => {
-    fetch('/api/entities')
-      .then((r) => r.json())
-      .then(setEntities)
-      .catch(() => {})
-  }, [])
 
   function toggleCollapsed() {
     setCollapsed((v) => {
@@ -281,28 +385,31 @@ export function Sidebar() {
     return name.slice(0, 2).toUpperCase()
   })()
 
-  const enriched = entities.map((entity) => ({
-    entity,
-    config: entityRegistry.get(entity.name),
-  }))
+  // Entity names + configs come from the registry (populated by initFromApi before render).
+  const allItems: NavItem[] = entityRegistry
+    .names()
+    .map((name) => ({ name, config: entityRegistry.get(name) }))
 
-  const navItems = enriched.filter(
-    ({ entity, config }) =>
+  const navItems = allItems.filter(
+    ({ name, config }) =>
       config.sidebar !== false &&
-      ((p) => p !== false && can(p))(perm(config, entity.name, 'list')),
+      ((p) => p !== false && can(p))(perm(config, name, 'list')),
   )
 
-  const systemItems = enriched.filter(
-    ({ entity, config }) =>
-      admin.securityEntities.includes(entity.name) &&
-      ((p) => p !== false && can(p))(perm(config, entity.name, 'list')),
+  const systemItems = allItems.filter(
+    ({ name, config }) =>
+      admin.securityEntities.includes(name) &&
+      ((p) => p !== false && can(p))(perm(config, name, 'list')),
   )
 
-  // Auto-open if a system entity is currently active
+  // Auto-open when navigating into a security entity route; stays open until manually closed.
   const systemActive = systemItems.some(
-    ({ entity }) =>
-      pathname.startsWith(`/${entity.name}/`) || pathname === `/${entity.name}`,
+    ({ name }) => pathname.startsWith(`/${name}/`) || pathname === `/${name}`,
   )
+
+  useEffect(() => {
+    if (systemActive) setSystemOpen(true)
+  }, [systemActive])
 
   return (
     <TooltipProvider delayDuration={100}>
@@ -331,17 +438,26 @@ export function Sidebar() {
           </div>
 
           {/* Nav */}
-          <nav className="flex-1 overflow-y-auto px-2 py-3 flex flex-col gap-0.5">
-            {/* System section */}
+          <nav className={['flex-1 overflow-y-auto py-3 flex flex-col', collapsed ? 'px-0 gap-1' : 'px-2 gap-0.5'].join(' ')}>
+            {/* ── System (security) items — always rendered first ────────── */}
             {systemItems.length > 0 &&
               (collapsed ? (
                 <div className="mb-1">
-                  <SystemFlyout items={systemItems} pathname={pathname} />
+                  <GroupFlyout
+                    label="Security"
+                    triggerIcon={<AdminIcon name="security" size={14} />}
+                    children={systemItems.map(({ name, config }) => ({
+                      model: name,
+                      label: config.label ?? capitalize(name),
+                      icon: config.icon,
+                    }))}
+                    pathname={pathname}
+                  />
                   <div className="mx-auto my-1.5 w-6 border-t border-border" />
                 </div>
               ) : (
                 <Collapsible
-                  open={systemOpen || systemActive}
+                  open={systemOpen}
                   onOpenChange={setSystemOpen}
                   className="my-2"
                 >
@@ -350,13 +466,13 @@ export function Sidebar() {
                       <AdminIcon name="security" size={14} />
                       <span>Security</span>
                     </span>
-                    <ChevronIcon open={systemOpen || systemActive} />
+                    <ChevronIcon open={systemOpen} />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="flex flex-col gap-0.5 mt-0.5 ml-5">
-                    {systemItems.map(({ entity, config }) => (
+                    {systemItems.map(({ name, config }) => (
                       <NavLink
-                        key={entity.name}
-                        entity={entity}
+                        key={name}
+                        name={name}
                         config={config}
                         pathname={pathname}
                         collapsed={collapsed}
@@ -366,25 +482,62 @@ export function Sidebar() {
                 </Collapsible>
               ))}
 
-            {/* Main entities */}
-            {navItems.length > 0 && (
-              <>
-                {!collapsed && (
-                  <p className="px-2 mb-1 text-[10px] uppercase tracking-widest text-muted-foreground font-medium select-none">
-                    Entities
-                  </p>
+            {/* ── Registered menu or auto-detected entities ─────────────── */}
+            {registeredMenu.length > 0
+              ? // Registered menu: only items explicitly configured server-side.
+                // Security items are excluded here — they are already shown above.
+                registeredMenu
+                  .filter(
+                    (i) =>
+                      !i.parent &&
+                      !admin.securityEntities.includes(i.entity ?? '') &&
+                      i.name !== 'security',
+                  )
+                  .map((item) => {
+                    const children = registeredMenu.filter(
+                      (i) =>
+                        i.parent === item.name &&
+                        !admin.securityEntities.includes(i.entity ?? ''),
+                    )
+                    if (children.length > 0) {
+                      return (
+                        <MenuGroup
+                          key={item.name}
+                          item={item}
+                          children={children}
+                          pathname={pathname}
+                          collapsed={collapsed}
+                        />
+                      )
+                    }
+                    return (
+                      <MenuNavLink
+                        key={item.name}
+                        item={item}
+                        pathname={pathname}
+                        collapsed={collapsed}
+                      />
+                    )
+                  })
+              : // Auto-detect: show all non-security entities.
+                navItems.length > 0 && (
+                  <>
+                    {!collapsed && (
+                      <p className="px-2 mb-1 text-[10px] uppercase tracking-widest text-muted-foreground font-medium select-none">
+                        Entities
+                      </p>
+                    )}
+                    {navItems.map(({ name, config }) => (
+                      <NavLink
+                        key={name}
+                        name={name}
+                        config={config}
+                        pathname={pathname}
+                        collapsed={collapsed}
+                      />
+                    ))}
+                  </>
                 )}
-                {navItems.map(({ entity, config }) => (
-                  <NavLink
-                    key={entity.name}
-                    entity={entity}
-                    config={config}
-                    pathname={pathname}
-                    collapsed={collapsed}
-                  />
-                ))}
-              </>
-            )}
           </nav>
 
           {/* User profile */}

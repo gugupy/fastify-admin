@@ -52,6 +52,21 @@ export interface EntityConfig {
   actions?: RowAction[]
 }
 
+/**
+ * A menu item registered via plugin options and served via /api/admin-config.
+ * Only registered items appear in the sidebar — nothing is auto-detected.
+ */
+export interface MenuItem {
+  name: string
+  label?: string
+  /** String icon key resolved client-side via iconRegistry. */
+  icon?: string
+  /** Name of a parent item to nest this item under. */
+  parent?: string
+  /** Entity model name this item links to (routes to /$entity/list). */
+  entity?: string
+}
+
 /** Full admin config response shape (from /api/admin-config) */
 export interface AdminConfig {
   name: string
@@ -65,6 +80,8 @@ export interface AdminConfig {
     microsoft: boolean
   }
   entities: Record<string, EntityConfig>
+  /** Registered menu items. When present, the sidebar renders only these items. */
+  menu: MenuItem[]
 }
 
 /** Internal — pairs the config with the actual MikroORM entity class. */
@@ -108,4 +125,15 @@ export interface FastifyAdminOptions extends FastifyPluginOptions {
   securityEntities?: string[]
   /** URL where the OAuth providers will redirect back to. e.g. http://localhost:3001 */
   appBaseUrl?: string
+  /**
+   * Sidebar menu items. When provided, only these items appear in the sidebar.
+   * Each item can link to an entity list page via the `entity` field.
+   */
+  menu?: MenuItem[]
+  /**
+   * Automatically append a "Security" group to the menu containing all
+   * securityEntities (user, role, permission by default).
+   * Default: false.
+   */
+  loadSecurity?: boolean
 }

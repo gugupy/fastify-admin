@@ -44,7 +44,23 @@ const fastifyAdmin: FastifyPluginAsync<FastifyAdminOptions> = async (
     views = {},
     securityEntities = ['user', 'role', 'permission'],
     appBaseUrl = process.env.ADMIN_BASE_URL ?? 'http://localhost:3001',
+    menu = [],
+    loadSecurity = false,
   } = options
+
+  // When loadSecurity is true, prepend a "Security" group (always at the top)
+  // containing all securityEntities as children.
+  const securityGroup = loadSecurity
+    ? [
+        { name: 'security', label: 'Security', icon: 'security' },
+        ...securityEntities.map((entity) => ({
+          name: entity,
+          entity,
+          parent: 'security',
+        })),
+      ]
+    : []
+  const resolvedMenu = [...securityGroup, ...menu]
 
   // ── Plugins ──────────────────────────────────────────────────────────────
 
@@ -138,6 +154,7 @@ const fastifyAdmin: FastifyPluginAsync<FastifyAdminOptions> = async (
         ),
       },
       entities,
+      menu: resolvedMenu,
     }
     reply.send(config)
   })
@@ -157,7 +174,11 @@ const fastifyAdmin: FastifyPluginAsync<FastifyAdminOptions> = async (
   // ── Entity CRUD routes ────────────────────────────────────────────────────
 
   app.get('/api/entities', async (_request, reply) => {
-    reply.send(registry.getAll().map(({ name, fields }) => ({ name, fields })))
+    reply.send(
+      registry
+        .getAll()
+        .map(({ name, fields, relations }) => ({ name, fields, relations })),
+    )
   })
 
   app.get('/api/dashboard', async (_request, reply) => {

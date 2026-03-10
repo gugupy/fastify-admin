@@ -57,12 +57,14 @@ export function EntityTable({
 
   const columns = useMemo(() => {
     const fields = entity.fields.filter((f) => f.name !== 'password')
+    // Use listConfig.columns when configured; otherwise show all scalar fields
+    // (relation fields are excluded to keep the table columns clean).
     if (listConfig.columns) {
       return listConfig.columns
         .map((name) => fields.find((f) => f.name === name))
         .filter(Boolean) as typeof fields
     }
-    return fields
+    return fields.filter((f) => !entity.relations.includes(f.name))
   }, [entity, listConfig.columns])
 
   const filtered = useMemo(() => {

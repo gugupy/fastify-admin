@@ -176,15 +176,58 @@ The pagination bar appears automatically at the bottom of the list when the tota
 
 ## Related-Entity Tabs
 
-The show page can display related collections as separate tabs. By default the panel auto-detects array fields (e.g. `OneToMany` / `ManyToMany` relations) and renders a tab for each one. You can declare them explicitly with `relatedViews()` to control which relations appear and in what order:
+The show page can display related collections as separate tabs. Tabs are **only shown when `relatedViews` is explicitly configured** — nothing is auto-detected.
 
 ```ts
 export class UserView extends EntityView {
-  relatedViews = ['posts', 'comments'];
+  relatedViews = ['role'];
 }
 ```
 
-Each entry must match the field name on the entity. The tab label is derived from the field name automatically. Omit `relatedViews()` entirely to fall back to auto-detection.
+Each entry must be the entity model name (e.g. `'role'`, not the field name `'roles'`). The tab label is derived from the model name automatically. Omit `relatedViews` entirely to suppress all relation tabs.
+
+---
+
+## Sidebar Menu
+
+By default the sidebar lists all registered entities automatically. You can replace this with a fully controlled menu by passing `menu` to the plugin.
+
+Each `MenuItem` has the following fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | `string` | Unique key used as the item identifier and for parent references |
+| `label` | `string` | Display text shown in the sidebar |
+| `icon` | `string` | Icon key resolved client-side via `iconRegistry.registerEntityIcons()` |
+| `parent` | `string` | Name of a parent item — nests this item under it as a collapsible group |
+| `entity` | `string` | Entity model name this item links to (routes to `/{entity}/list`) |
+
+```ts
+await app.register(fastifyAdmin, {
+  orm,
+  menu: [
+    { name: 'content', label: 'Content', icon: 'Folder01' },
+    { name: 'posts',   label: 'Posts',   entity: 'post',    parent: 'content' },
+    { name: 'products', label: 'Products', entity: 'product', icon: 'Package01' },
+  ],
+})
+```
+
+Items without a `parent` are rendered as top-level entries. Items with a `parent` are grouped under that parent as a collapsible section.
+
+### Auto-loading the Security group
+
+Set `loadSecurity: true` to automatically prepend a **Security** group containing all `securityEntities` (default: `user`, `role`, `permission`) at the top of the menu:
+
+```ts
+await app.register(fastifyAdmin, {
+  orm,
+  loadSecurity: true,
+  menu: [
+    // your other items — Security will appear above these
+  ],
+})
+```
 
 ---
 
