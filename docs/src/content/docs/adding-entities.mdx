@@ -11,9 +11,15 @@ An "entity" is a data model — like a `Post`, `Product`, `Order`, or `Customer`
 
 ## The Simplest Case
 
-**Step 1 — Create a MikroORM entity**
+**Step 1 — Scaffold the entity and view (optional but recommended)**
 
-Add a file in `fastify-admin/src/entities/`:
+```bash
+npx fastify-admin generate:resource Post
+```
+
+This creates `src/entities/post.entity.ts` and `src/views/post.view.ts` with starter boilerplate.
+
+**Step 2 — Edit the generated entity if needed**
 
 ```ts
 // fastify-admin/src/entities/post.entity.ts
@@ -35,10 +41,11 @@ export class Post {
 }
 ```
 
-**Step 2 — Create a migration**
+**Step 3 — Create and run a migration**
 
 ```bash
-pnpm migration:create
+npx fastify-admin migrate:create add-post
+npx fastify-admin migrate:up
 ```
 
 That's it. Restart `pnpm dev` and you'll see "Post" in the sidebar with a full list/create/edit/delete UI.
@@ -111,10 +118,13 @@ export class PostView extends EntityView {
   label = 'Blog Posts';
   icon = 'Document';
 
-  listColumns() { return ['id', 'title', 'published']; }
-  showFields() { return ['id', 'title', 'content', 'published']; }
-  editFields() { return ['title', 'content', 'published']; }
-  addFields() { return ['title', 'content']; }
+  listColumns = ['id', 'title', 'published'];
+  showFields  = ['id', 'title', 'content', 'published'];
+  editFields  = ['title', 'content', 'published'];
+  addFields   = ['title', 'content'];
+
+  // Optional: override the number of rows per page (default: 20)
+  pageSize = 50;
 }
 ```
 
@@ -147,6 +157,48 @@ post: {
   sidebar: false,
 }
 ```
+
+---
+
+## Pagination
+
+The list view is paginated server-side. The default page size is **20 rows**. Override it per entity by implementing `pageSize()` on your `EntityView`:
+
+```ts
+export class PostView extends EntityView {
+  pageSize = 50;
+}
+```
+
+The pagination bar appears automatically at the bottom of the list when the total number of records exceeds the page size. Clients pass `?page=1&limit=20` as query parameters — there is no request body for list reads.
+
+---
+
+## Related-Entity Tabs
+
+The show page can display related collections as separate tabs. By default the panel auto-detects array fields (e.g. `OneToMany` / `ManyToMany` relations) and renders a tab for each one. You can declare them explicitly with `relatedViews()` to control which relations appear and in what order:
+
+```ts
+export class UserView extends EntityView {
+  relatedViews = ['posts', 'comments'];
+}
+```
+
+Each entry must match the field name on the entity. The tab label is derived from the field name automatically. Omit `relatedViews()` entirely to fall back to auto-detection.
+
+---
+
+## REST API Reference
+
+All data operations use standard HTTP methods. Fields and columns are resolved server-side from the registry config — no request body is needed for reads.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/{model}?page=1&limit=20` | Paginated list |
+| `GET` | `/api/{model}/{id}` | Show a single record |
+| `POST` | `/api/{model}/create` | Create a record |
+| `PUT` | `/api/{model}/{id}` | Update a record |
+| `DELETE` | `/api/{model}/{id}` | Delete a record |
 
 ---
 

@@ -60,8 +60,7 @@ This folder does two things:
     - migrations/  Database migrations (one file per schema change)
     - seeders/  Optional data seeders for testing
     - cli/
-      - create-admin.ts  `pnpm create-admin` command
-      - reset-password.ts  `pnpm reset-password` command
+      - index.ts  Unified CLI entry point (`npx fastify-admin <command>`)
   - Dockerfile  Docker image for the API container
 </FileTree>
 
@@ -69,6 +68,20 @@ This folder does two things:
 
 - **`dev.ts`** — used only when developing this project. It starts a full server so you can work on the admin panel itself.
 - **`plugin.ts`** — used by everyone else who installs this as an npm package. They register it in their own Fastify app.
+
+### CLI (`npx fastify-admin <command>`)
+
+All CLI commands are handled by `src/cli/index.ts`. Run them via `npx fastify-admin` from any project that has the package installed.
+
+| Command | Description |
+|---------|-------------|
+| `init` | Scaffold a new project — prompts for a name and creates a directory with all starter files |
+| `generate:resource <Name>` | Create `src/entities/<name>.entity.ts` and `src/views/<name>.view.ts` |
+| `migrate:create <name>` | Create a new MikroORM migration file |
+| `migrate:up` | Run all pending migrations |
+| `migrate:down` | Roll back the last migration |
+| `create-admin` | Interactive prompt to create a superuser account |
+| `reset-password <email>` | Reset a user's password |
 
 ---
 

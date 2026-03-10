@@ -16,12 +16,11 @@ import type {
  * @example
  * class UserView extends EntityView {
  *     label = 'Users';
- *
- *     listColumns() { return ['id', 'name', 'email']; }
- *     showFields()  { return ['id', 'name', 'email', 'roles']; }
+ *     listColumns = ['id', 'name', 'email'];
+ *     showFields  = ['id', 'name', 'email', 'roles'];
  *
  *     // Make read-only by disabling mutating operations:
- *     permissions() { return { create: false, edit: false, delete: false } }
+ *     permissions = { create: false, edit: false, delete: false }
  * }
  */
 export class EntityView {
@@ -40,45 +39,31 @@ export class EntityView {
   // ── View customisation ────────────────────────────────────────────────────
 
   /** Columns shown in the list table. Empty array → show all. */
-  listColumns(): string[] {
-    return []
-  }
+  listColumns: string[] = []
 
   /** Number of rows per page in the list view. Default: 20. */
-  pageSize(): number {
-    return 20
-  }
+  pageSize: number = 20
 
   /** Fields shown on the detail (show) page. Empty array → show all. */
-  showFields(): string[] {
-    return []
-  }
+  showFields: string[] = []
 
   /** Fields in the edit form. Empty array → show all editable fields. */
-  editFields(): string[] {
-    return []
-  }
+  editFields: string[] = []
 
   /** Fields in the create form. Empty array → show all editable fields. */
-  addFields(): string[] {
-    return []
-  }
+  addFields: string[] = []
 
   /** Extra row-level action buttons in the list table. */
-  rowActions(): RowAction[] {
-    return []
-  }
+  rowActions: RowAction[] = []
 
   /**
-   * Entity classes to render as relation tabs on the show page.
+   * Relation field names to render as tabs on the show page.
    * Auto-detected from array fields if omitted.
    *
    * @example
-   * relatedViews() { return [Order, Review] }
+   * relatedViews = ['orders', 'reviews']
    */
-  relatedViews(): (abstract new (...args: any[]) => any)[] {
-    return []
-  }
+  relatedViews: string[] = []
 
   // ── Permission overrides ──────────────────────────────────────────────────
 
@@ -86,40 +71,30 @@ export class EntityView {
    * Override default permission strings.
    * Defaults: `{model}.list`, `{model}.show`, `{model}.create`, etc.
    */
-  permissions(): EntityPermissions {
-    return {}
-  }
+  permissions: EntityPermissions = {}
 
   // ── Computed configs ──────────────────────────────────────────────────────
 
   get listConfig(): ListConfig {
-    const cols = this.listColumns()
-    const size = this.pageSize()
     return {
-      ...(cols.length ? { columns: cols } : {}),
-      ...(size !== 20 ? { pageSize: size } : {}),
+      ...(this.listColumns.length ? { columns: this.listColumns } : {}),
+      ...(this.pageSize !== 20 ? { pageSize: this.pageSize } : {}),
     }
   }
 
   get showConfig(): ShowConfig {
-    const fields = this.showFields()
-    const related = this.relatedViews()
     return {
-      ...(fields.length ? { fields } : {}),
-      ...(related.length
-        ? { relatedViews: related.map((e) => e.name.toLowerCase()) }
-        : {}),
+      ...(this.showFields.length ? { fields: this.showFields } : {}),
+      ...(this.relatedViews.length ? { relatedViews: this.relatedViews } : {}),
     }
   }
 
   get editConfig(): EditConfig {
-    const fields = this.editFields()
-    return fields.length ? { fields } : {}
+    return this.editFields.length ? { fields: this.editFields } : {}
   }
 
   get addConfig(): AddConfig {
-    const fields = this.addFields()
-    return fields.length ? { fields } : {}
+    return this.addFields.length ? { fields: this.addFields } : {}
   }
 
   // ── Internal ──────────────────────────────────────────────────────────────
@@ -130,12 +105,12 @@ export class EntityView {
       label: this.label,
       icon: this.icon,
       sidebar: this.sidebar,
-      permissions: this.permissions(),
+      permissions: this.permissions,
       list: this.listConfig,
       show: this.showConfig,
       edit: this.editConfig,
       add: this.addConfig,
-      actions: this.rowActions(),
+      actions: this.rowActions,
     }
   }
 }
