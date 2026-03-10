@@ -9,7 +9,7 @@ export class RoleView extends EntityView {
   }
 
   showFields() {
-    return ['id', 'name', 'permissions']
+    return ['id', 'name', 'permissions.name']
   }
 
   permissions() {

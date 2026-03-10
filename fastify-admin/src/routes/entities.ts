@@ -12,23 +12,51 @@ export async function registerEntityRoutes(
     const base = `/api/${entity.name}`
     const iface = new EntityInterface(em, entity.entity)
 
-    app.post(`${base}/list`, (req: any) => {
-      const { fields } = req.body as { fields?: string[] }
+    app.get(base, (req: any) => {
+      // List columns come from the registry config — no request body needed.
+      const listFields = entity.config.list?.columns
       const { page, limit } = req.query as { page?: string; limit?: string }
       if (page !== undefined) {
         const p = Math.max(1, parseInt(page) || 1)
         const l = Math.min(200, Math.max(1, parseInt(limit ?? '20') || 20))
-        return iface.findPaginated(p, l, fields)
+        return iface.findPaginated(p, l, listFields)
       }
-      return iface.findAll(fields)
+      return iface.findAll(listFields)
     })
-    app.post(`${base}/show/:id`, (req: any) => {
-      const { fields } = req.body as { fields?: string[] }
+
+    app.get(`${base}/:id`, (req: any) => {
       const opts: any = { populate: entity.relations }
-      if (fields !== undefined) {
-        opts.fields = fields.filter((v) => !entity.relations.includes(v))
+
+      // Show fields come from the registry config — no request body needed.
+      const showFields = entity.config.show?.fields
+
+      // Build relation field specs so each relation only fetches its listColumns.
+      // e.g. roles relation with listColumns ['id','name'] → 'roles.id', 'roles.name'
+      const relationFields: string[] = entity.relations.flatMap((rel) => {
+        const relEntity =
+          registry.get(rel) ??
+          registry.getAll().find((e) => `${e.name}s` === rel)
+        const cols = relEntity?.config?.list?.columns
+        if (cols?.length) return cols.map((c) => `${rel}.${c}`)
+        return [] // no restriction — MikroORM will fetch all fields for this relation
+      })
+
+      if (showFields !== undefined) {
+        // Strip bare relation names from scalar fields — relations are covered by relationFields.
+        // relationFields adds e.g. 'roles.id', 'roles.name' so only listColumns are fetched.
+        const scalarFields = showFields.filter(
+          (v) => !entity.relations.includes(v),
+        )
+        opts.fields = [...scalarFields, ...relationFields]
+      } else if (relationFields.length) {
+        // No explicit field list but relations have column restrictions.
+        // Enumerate entity scalar fields so MikroORM doesn't drop them.
+        const scalarEntityFields = entity.fields
+          .filter((f) => !entity.relations.includes(f.name))
+          .map((f) => f.name)
+        opts.fields = [...scalarEntityFields, ...relationFields]
       }
-      globalThis.console.log('Options', opts)
+
       return iface.findById(req.params.id, opts)
     })
     app.post(`${base}/create`, (req: any) => iface.create(req.body))

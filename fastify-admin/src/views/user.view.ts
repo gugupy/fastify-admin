@@ -5,11 +5,11 @@ export class UserView extends EntityView {
   icon = 'User03'
 
   listColumns() {
-    return ['id', 'fullName', 'email', 'roles']
+    return ['id', 'fullName', 'email']
   }
 
   showFields() {
-    return ['id', 'username', 'fullName', 'email', 'role.name']
+    return ['id', 'username', 'fullName', 'email', 'roles.name']
   }
 
   editFields() {

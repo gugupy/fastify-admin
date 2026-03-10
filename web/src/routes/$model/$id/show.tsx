@@ -12,15 +12,7 @@ export const Route = createFileRoute('/$model/$id/show')({
   loader: async ({ params }) => {
     const [entitiesRes, recordRes] = await Promise.all([
       fetch('/api/entities'),
-      fetch(`/api/show/${params.id}`, {
-        method: 'POST',
-        body: JSON.stringify({
-          fields: entityRegistry.get(params.model)?.show?.fields,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }),
+      fetch(`/api/${params.model}/${params.id}`),
     ])
     const entities: EntityMeta[] = await entitiesRes.json()
     const record: Record<string, unknown> = await recordRes.json()
@@ -46,7 +38,9 @@ function ShowComponent() {
   }, [model, id])
 
   if (!entity) {
-    return <div className="p-6 text-red-500">Entity "{model}" not found.</div>
+    return (
+      <div className="p-6 text-destructive">Entity "{model}" not found.</div>
+    )
   }
 
   if (config.show?.component) {

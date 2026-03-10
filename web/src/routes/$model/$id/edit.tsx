@@ -13,7 +13,6 @@ export const Route = createFileRoute('/$model/$id/edit')({
     const entitiesRes = await fetch('/api/entities')
     const entities: EntityMeta[] = await entitiesRes.json()
     const entity = entities.find((e) => e.name === params.model)
-    const config = entityRegistry.get(params.model)
     // Ensure that if there are dotted field names like "roles.name",
     // we also include a top-level field for the relation (e.g. "roles")
     if (entity && Array.isArray(entity.fields)) {
@@ -34,11 +33,7 @@ export const Route = createFileRoute('/$model/$id/edit')({
 
     let record: Record<string, unknown> = {}
     if (params.id !== 'new') {
-      const recordRes = await fetch(`/api/${params.model}/show/${params.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: config.edit?.fields }),
-      })
+      const recordRes = await fetch(`/api/${params.model}/${params.id}`)
       record = await recordRes.json()
     }
 
@@ -62,7 +57,7 @@ function EditComponent() {
 
   if (requiredPerm === false || !can(requiredPerm)) {
     return (
-      <div className="p-6 text-red-500">
+      <div className="p-6 text-destructive">
         You don't have permission to {isNew ? 'create' : 'edit'} {model}{' '}
         records.
       </div>
@@ -70,7 +65,7 @@ function EditComponent() {
   }
 
   if (!entity) {
-    return <div className="p-6 text-red-500">Entity "{model}" not found.</div>
+    return <div className="p-6 text-destructive">Entity "{model}" not found.</div>
   }
 
   if (config.edit?.component) {
@@ -156,7 +151,7 @@ function EditComponent() {
           </div>
         ))}
 
-        {error && <div className="px-4 py-3 text-sm text-red-500">{error}</div>}
+        {error && <div className="px-4 py-3 text-sm text-destructive">{error}</div>}
 
         <div className="flex justify-end gap-2 px-4 py-3">
           <Link to="/$model/list" params={{ model }}>

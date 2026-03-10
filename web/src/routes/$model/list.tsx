@@ -22,13 +22,7 @@ export const Route = createFileRoute('/$model/list')({
     const pageSize = config.list?.pageSize ?? DEFAULT_PAGE_SIZE
     const [entitiesRes, recordsRes] = await Promise.all([
       fetch('/api/entities'),
-      fetch(`/api/${params.model}/list?page=1&limit=${pageSize}`, {
-        body: JSON.stringify({ fields: config.list?.columns }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      }),
+      fetch(`/api/${params.model}?page=1&limit=${pageSize}`),
     ])
     const entities: EntityMeta[] = await entitiesRes.json()
     const paginated: { data: Record<string, unknown>[]; total: number } =
@@ -107,7 +101,7 @@ function ListComponent() {
   const config = entityRegistry.get(model)
 
   if (!entity) {
-    return <div className="p-6 text-red-500">Entity "{model}" not found.</div>
+    return <div className="p-6 text-destructive">Entity "{model}" not found.</div>
   }
 
   if (config.list?.component) {
@@ -158,16 +152,9 @@ function DefaultList({
   }, [records, total])
 
   async function goToPage(p: number) {
-    const res = await fetch(`/api/${model}/list?page=${p}&limit=${pageSize}`, {
-      body: JSON.stringify({ fields: config.list?.columns }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      method: 'POST',
-    })
+    const res = await fetch(`/api/${model}?page=${p}&limit=${pageSize}`)
     const paginated: { data: Record<string, unknown>[]; total: number } =
       await res.json()
-    console.log(paginated)
     setCurrentRecords(paginated.data)
     setCurrentTotal(paginated.total)
     setPage(p)
