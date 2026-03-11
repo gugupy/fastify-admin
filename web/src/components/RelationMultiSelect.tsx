@@ -40,19 +40,13 @@ export function RelationMultiSelect({
   value: unknown
   onChange: (v: unknown) => void
 }) {
-  const [all, setAll] = useState<RelatedItem[]>([])
+  const [allItem, setAllItem] = useState<RelatedItem[]>([])
   const anchor = useComboboxAnchor()
 
   useEffect(() => {
-    fetch(`/api/${entityName}/list`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({}),
-    })
+    fetch(`/api/${entityName}`)
       .then((r) => r.json())
-      .then(setAll)
+      .then(setAllItem)
       .catch(() => {})
   }, [entityName])
 
@@ -63,7 +57,7 @@ export function RelationMultiSelect({
 
   // Group items by the prefix before the first dot (e.g. "user.list" → "user"), else "general"
   const groups: Record<string, RelatedItem[]> = {}
-  for (const item of all) {
+  for (const item of allItem) {
     const label = getLabel(item)
     const prefix = label.includes('.') ? label.split('.')[0] : entityName
     ;(groups[prefix] ??= []).push(item)
@@ -77,7 +71,7 @@ export function RelationMultiSelect({
     <Combobox multiple value={selectedIds} onValueChange={handleChange}>
       <ComboboxChips ref={anchor} className="w-full -md min-h-9">
         {selectedIds.map((id) => {
-          const item = all.find((p) => String(p.id) === id)
+          const item = allItem.find((p) => String(p.id) === id)
           return (
             <ComboboxChip key={id} value={id}>
               {item ? getLabel(item) : id}
@@ -91,7 +85,7 @@ export function RelationMultiSelect({
 
       <ComboboxContent anchor={anchor}>
         <ComboboxList>
-          <ComboboxEmpty>No {entityName}s found</ComboboxEmpty>
+          {!allItem && <ComboboxEmpty> No {entityName}s found</ComboboxEmpty>}
           {Object.entries(groups).map(([group, items]) => (
             <ComboboxGroup key={group}>
               <ComboboxLabel>{capitalize(group)}</ComboboxLabel>

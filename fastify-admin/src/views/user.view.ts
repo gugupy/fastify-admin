@@ -9,5 +9,5 @@ export class UserView extends EntityView {
   listColumns = ['id', 'fullName', 'email']
   showFields = ['id', 'username', 'fullName', 'email', 'roles.name']
   editFields = ['fullName', 'roles.name']
-  addFields = ['username', 'fullName', 'email', 'password', 'roles']
+  addFields = ['username', 'fullName', 'email', 'password', 'roles.name']
 }

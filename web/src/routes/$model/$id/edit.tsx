@@ -75,7 +75,7 @@ function EditComponent() {
     return <Custom model={model} id={id} entity={entity} record={record} />
   }
 
-  const editConfig = config.edit ?? {}
+  const editConfig = (isNew ? config.add : config.edit) ?? {}
   const allEditable = entity.fields.filter(isEditableField)
   // If fields are explicitly listed, include them even if they're relations (not primitive)
   const editableFields = editConfig.fields
