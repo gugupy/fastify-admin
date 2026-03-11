@@ -12,15 +12,15 @@
  * Vite proxies /api/* requests to this server on port 3001.
  */
 import { fastify } from 'fastify'
-import { MikroORM } from '@mikro-orm/postgresql'
 import { fastifyAdmin } from './plugin.js'
 import { views } from './views/index.js'
+import { initORM } from './db.js'
 
-const orm = await MikroORM.init()
-await orm.migrator.up()
+const db = await initORM()
+await db.migrator.up()
+const orm = db.orm
 
 const app = fastify({ logger: { level: 'info' } })
-
 await app.register(fastifyAdmin, {
   orm,
   requireEmailVerification: false,

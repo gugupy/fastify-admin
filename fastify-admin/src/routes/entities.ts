@@ -1,6 +1,6 @@
 import { EntityManager } from '@mikro-orm/core'
 import { FastifyInstance } from 'fastify'
-import { EntityRegistry } from '../registry.js'
+import { EntityRegistry } from '../entityRegistry.js'
 import { EntityInterface } from '../entityInterface.js'
 import { findFields } from '../lib/helpers.js'
 

@@ -2,10 +2,10 @@
 export { fastifyAdmin, default } from './plugin.js'
 
 // Base class for entity admin configuration
-export { EntityView } from './EntityView.js'
+export { EntityView } from './entityView.js'
 
 // User-facing registry for collecting entity views across multiple files
-export { ViewRegistry } from './ViewRegistry.js'
+export { ViewRegistry } from './viewRegistry.js'
 
 // Built-in security entity views — extend to customise
 export { UserView } from './views/user.view.js'
@@ -16,6 +16,9 @@ export { PermissionView } from './views/permission.view.js'
 export { User } from './entities/user.entity.js'
 export { Role } from './entities/role.entity.js'
 export { Permission } from './entities/permission.entity.js'
+
+// orm initialization function
+export { initORM } from './db.js'
 
 // Types
 export type {

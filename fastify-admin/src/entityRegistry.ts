@@ -1,6 +1,6 @@
 import type { MikroORM } from '@mikro-orm/core'
 import type { InternalEntity, EntityConfig } from './types.js'
-import type { EntityView } from './EntityView.js'
+import type { EntityView } from './entityView.js'
 
 export class EntityRegistry {
   private entities: InternalEntity[] = []

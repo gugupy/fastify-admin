@@ -1,8 +1,8 @@
 import type { EntityClass } from '@mikro-orm/core'
 import type { MikroORM } from '@mikro-orm/core'
 import type { FastifyPluginOptions } from 'fastify'
-import type { EntityView } from './EntityView.js'
-import type { ViewRegistry } from './ViewRegistry.js'
+import type { EntityView } from './entityView.js'
+import type { ViewRegistry } from './viewRegistry.js'
 
 export interface EntityPermissions {
   /** Permission string, or `false` to disable the operation entirely. */

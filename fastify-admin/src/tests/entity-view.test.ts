@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { EntityView } from '../EntityView.js'
-import { EntityRegistry } from '../registry.js'
+import { EntityView } from '../entityView.js'
+import { EntityRegistry } from '../entityRegistry.js'
 
 // ── Default values ────────────────────────────────────────────────────────────
 

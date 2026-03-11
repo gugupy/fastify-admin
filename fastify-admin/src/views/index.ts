@@ -1,4 +1,4 @@
-import { ViewRegistry } from '../ViewRegistry.js'
+import { ViewRegistry } from '../viewRegistry.js'
 import { UserView } from './user.view.js'
 import { RoleView } from './role.view.js'
 import { PermissionView } from './permission.view.js'

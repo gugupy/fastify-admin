@@ -10,6 +10,7 @@ import { Sidebar } from '../components/Sidebar'
 import { NotFoundPage, ErrorPage } from '../components/ErrorPages'
 
 export const HasLayoutContext = createContext(false)
+
 export function useHasLayout() {
   return useContext(HasLayoutContext)
 }

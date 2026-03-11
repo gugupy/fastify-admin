@@ -635,7 +635,7 @@
           <span>plugin registration</span>
         </div>
         <pre><span class="kw">import</span> { fastifyAdmin } <span class="kw">from</span> <span class="str">'fastify-admin'</span>
-<span class="kw">import</span> { MikroORM } <span class="kw">from</span> <span class="str">'@mikro-orm/postgresql'</span>
+<span class="kw">import</span> { initORM } <span class="kw">from</span> <span class="str">'./db.js'</span>
 
 <span class="kw">const</span> orm = <span class="kw">await</span> MikroORM.<span class="fn">init</span>()
 

@@ -1,4 +1,4 @@
-import { EntityView } from '../EntityView.js'
+import { EntityView } from '../entityView.js'
 
 export class UserView extends EntityView {
   sidebar = false

@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Sidebar } from './Sidebar'
-import { useRbac } from '../lib/rbac'
+import { RbacProvider, useRbac } from '../lib/rbac'
 import { useHasLayout } from '../routes/__root'
 
 function ErrorContent({ children }: { children: React.ReactNode }) {
@@ -31,12 +31,17 @@ function ErrorLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 flex items-center justify-center px-4">
-        {children}
-      </main>
-    </div>
+    // Wrap the layout with RbacProvider because Sidebar uses useRbac to read
+    // authentication, permissions and user profile details. Without the provider
+    // the Sidebar would render incompletely on the error page.
+    <RbacProvider>
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 flex items-center justify-center px-4">
+          {children}
+        </main>
+      </div>
+    </RbacProvider>
   )
 }
 

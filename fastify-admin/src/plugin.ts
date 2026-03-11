@@ -7,8 +7,8 @@ import fastifyJwt from '@fastify/jwt'
 import fastifyStatic from '@fastify/static'
 import fp from 'fastify-plugin'
 import type { FastifyPluginAsync } from 'fastify'
-import { EntityRegistry } from './registry.js'
-import { ViewRegistry } from './ViewRegistry.js'
+import { EntityRegistry } from './entityRegistry.js'
+import { ViewRegistry } from './viewRegistry.js'
 import {
   registerAuthRoutes,
   registerOAuthRoutes,
@@ -71,7 +71,6 @@ const fastifyAdmin: FastifyPluginAsync<FastifyAdminOptions> = async (
   })
 
   // ── Entity registry ───────────────────────────────────────────────────────
-
   const registry = new EntityRegistry()
 
   // Security entities are hidden from main nav but accessible via RBAC
@@ -112,11 +111,9 @@ const fastifyAdmin: FastifyPluginAsync<FastifyAdminOptions> = async (
   }
 
   // ── RBAC seeding ──────────────────────────────────────────────────────────
-
-  await seedRbac(orm.em, registry, securityEntities)
+  await seedRbac(orm.em, registry, securityEntities, menu)
 
   // ── Auth routes (public) ──────────────────────────────────────────────────
-
   await registerAuthRoutes(app, orm.em, {
     signup,
     requireEmailVerification,
@@ -125,7 +122,6 @@ const fastifyAdmin: FastifyPluginAsync<FastifyAdminOptions> = async (
   await registerOAuthRoutes(app, orm.em, appBaseUrl)
 
   // ── Admin config endpoint ─────────────────────────────────────────────────
-
   app.get('/api/admin-config', async (_req, reply) => {
     const entities: AdminConfig['entities'] = {}
     for (const entity of registry.getAll()) {
@@ -160,7 +156,6 @@ const fastifyAdmin: FastifyPluginAsync<FastifyAdminOptions> = async (
   })
 
   // ── Auth guard for all /api routes except /api/auth/* ────────────────────
-
   app.addHook('preHandler', async (req, reply) => {
     if (
       req.routeOptions.url?.startsWith('/api/') &&
@@ -172,7 +167,6 @@ const fastifyAdmin: FastifyPluginAsync<FastifyAdminOptions> = async (
   })
 
   // ── Entity CRUD routes ────────────────────────────────────────────────────
-
   app.get('/api/entities', async (_request, reply) => {
     reply.send(
       registry

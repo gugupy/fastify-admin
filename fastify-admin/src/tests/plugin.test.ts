@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp, teardown } from './setup.js'
-import { EntityView } from '../EntityView.js'
+import { EntityView } from '../entityView.js'
 import type { MenuItem } from '../types.js'
 
 // ── views option ──────────────────────────────────────────────────────────────
