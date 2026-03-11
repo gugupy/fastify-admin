@@ -206,9 +206,9 @@ Each `MenuItem` has the following fields:
 await app.register(fastifyAdmin, {
   orm,
   menu: [
-    { name: 'content', label: 'Content', icon: 'Folder01' },
+    { name: 'content', label: 'Content', icon: 'Folder' },
     { name: 'posts',   label: 'Posts',   entity: 'post',    parent: 'content' },
-    { name: 'products', label: 'Products', entity: 'product', icon: 'Package01' },
+    { name: 'products', label: 'Products', entity: 'product', icon: 'Package' },
   ],
 })
 ```

@@ -53,7 +53,7 @@ class ProductView extends EntityView {
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `label` | `string \| undefined` | Entity name (capitalised) | Sidebar display name |
-| `icon` | `string \| undefined` | — | Icon name (e.g. a HugeIcons key like `'user-03'`) |
+| `icon` | `string \| undefined` | — | Lucide icon name (e.g. `'User'`, `'ShoppingCart'`) |
 | `sidebar` | `boolean` | `true` | Whether to show the entity in the sidebar |
 
 #### Methods

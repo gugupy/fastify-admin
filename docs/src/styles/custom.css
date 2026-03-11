@@ -55,3 +55,31 @@ starlight-theme-select select:focus-visible {
 * {
   border-radius: 0 !important;
 }
+
+/* Font size & readability
+   JetBrains Mono is a monospace font used for body text, so it needs
+   slightly larger sizes and more generous line-height than a proportional font. */
+:root {
+  --sl-text-xs: 0.75rem;
+  --sl-text-sm: 0.8125rem;
+  --sl-text-base: 0.9375rem;   /* 15px — up from Starlight's ~14px default */
+  --sl-text-lg: 1.0625rem;
+  --sl-text-xl: 1.25rem;
+  --sl-text-2xl: 1.5rem;
+  --sl-text-3xl: 1.875rem;
+  --sl-text-4xl: 2.25rem;
+  --sl-text-5xl: 3rem;
+}
+
+/* Prose content area */
+.sl-markdown-content {
+  font-size: var(--sl-text-base);
+  line-height: 1.8;
+}
+
+/* Code blocks — keep at a comfortable smaller size */
+.sl-markdown-content pre,
+.sl-markdown-content code {
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}

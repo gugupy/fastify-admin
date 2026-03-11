@@ -22,9 +22,6 @@ importers:
 
   fastify-admin:
     dependencies:
-      '@fastify-admin/types':
-        specifier: workspace:*
-        version: link:../types
       nodemailer:
         specifier: ^8.0.1
         version: 8.0.1
@@ -102,49 +99,6 @@ importers:
         specifier: ^4.0.18
         version: 4.0.18(@types/node@24.11.0)(@vitest/ui@4.0.18)(jiti@2.6.1)(lightningcss@1.31.1)(msw@2.12.10(@types/node@24.11.0)(typescript@5.9.3))(tsx@4.21.0)
 
-  test-app:
-    dependencies:
-      '@fastify/cookie':
-        specifier: ^11.0.2
-        version: 11.0.2
-      '@fastify/jwt':
-        specifier: ^10.0.0
-        version: 10.0.0
-      '@fastify/oauth2':
-        specifier: ^8.2.0
-        version: 8.2.0
-      '@fastify/static':
-        specifier: ^9.0.0
-        version: 9.0.0
-      '@mikro-orm/core':
-        specifier: ^6.6.8
-        version: 6.6.8
-      '@mikro-orm/postgresql':
-        specifier: ^6.6.8
-        version: 6.6.8(@mikro-orm/core@6.6.8)
-      '@mikro-orm/reflection':
-        specifier: ^6.6.8
-        version: 6.6.8(@mikro-orm/core@6.6.8)
-      fastify:
-        specifier: ^5.7.4
-        version: 5.7.4
-      fastify-admin:
-        specifier: workspace:*
-        version: link:../fastify-admin
-      fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
-    devDependencies:
-      '@types/node':
-        specifier: ^24.0.0
-        version: 24.11.0
-      ts-node:
-        specifier: ^10.9.2
-        version: 10.9.2(@types/node@24.11.0)(typescript@5.9.3)
-      typescript:
-        specifier: ~5.9.3
-        version: 5.9.3
-
   types: {}
 
   web:
@@ -158,12 +112,6 @@ importers:
       '@fontsource-variable/jetbrains-mono':
         specifier: ^5.2.8
         version: 5.2.8
-      '@hugeicons/core-free-icons':
-        specifier: ^3.3.0
-        version: 3.3.0
-      '@hugeicons/react':
-        specifier: ^1.1.5
-        version: 1.1.5(react@19.2.4)
       '@tailwindcss/vite':
         specifier: ^4.1.17
         version: 4.2.1(vite@7.3.1(@types/node@24.11.0)(jiti@2.6.1)(lightningcss@1.31.1)(tsx@4.21.0))
@@ -176,6 +124,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      lucide-react:
+        specifier: ^0.577.0
+        version: 0.577.0(react@19.2.4)
       radix-ui:
         specifier: ^1.4.3
         version: 1.4.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -912,14 +863,6 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
-
-  '@hugeicons/core-free-icons@3.3.0':
-    resolution: {integrity: sha512-qYyr4JQ2eQIHTSTbITvnJvs6ERNK64D9gpwZnf2IyuG0exzqfyABLO/oTB71FB3RZPfu1GbwycdiGSo46apjMQ==}
-
-  '@hugeicons/react@1.1.5':
-    resolution: {integrity: sha512-JX/iDz3oO7hWdVqbjwFwRrAjHk8h2vI+mBkNzp4JcXG3t4idoupfjon73nLOA7cr27m0M8hrRC1Q2h6nEBGKVA==}
-    peerDependencies:
-      react: '>=16.0.0'
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -4065,6 +4008,11 @@ packages:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
 
+  lucide-react@0.577.0:
+    resolution: {integrity: sha512-4LjoFv2eEPwYDPg/CUdBJQSDfPyzXCRrVW1X7jrx/trgxnxkHFjnVZINbzvzxjN70dxychOfg+FTYwBiS3pQ5A==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
@@ -6556,12 +6504,6 @@ snapshots:
   '@hono/node-server@1.19.10(hono@4.12.5)':
     dependencies:
       hono: 4.12.5
-
-  '@hugeicons/core-free-icons@3.3.0': {}
-
-  '@hugeicons/react@1.1.5(react@19.2.4)':
-    dependencies:
-      react: 19.2.4
 
   '@humanfs/core@0.19.1': {}
 
@@ -10039,6 +9981,10 @@ snapshots:
   lru-cache@6.0.0:
     dependencies:
       yallist: 4.0.0
+
+  lucide-react@0.577.0(react@19.2.4):
+    dependencies:
+      react: 19.2.4
 
   magic-string@0.30.21:
     dependencies:

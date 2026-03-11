@@ -2,7 +2,7 @@ import { EntityView } from '../EntityView.js'
 
 export class PermissionView extends EntityView {
   sidebar = false
-  icon = 'LockKey'
+  icon = 'KeyRound'
 
   listColumns = ['id', 'name']
   permissions = {

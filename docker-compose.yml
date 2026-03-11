@@ -48,5 +48,23 @@ services:
     depends_on:
       - api
 
+  website:
+    image: nginx:alpine
+    volumes:
+      - ./website:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
+
+  docs:
+    build:
+      context: .
+      dockerfile: docs/Dockerfile
+    volumes:
+      - ./docs:/app/docs
+      - /app/node_modules
+      - /app/docs/node_modules
+    ports:
+      - "4321:4321"
+
 volumes:
   postgres_data:

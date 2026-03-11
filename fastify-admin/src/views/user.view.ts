@@ -2,7 +2,7 @@ import { EntityView } from '../EntityView.js'
 
 export class UserView extends EntityView {
   sidebar = false
-  icon = 'User03'
+  icon = 'User'
 
   relatedViews = ['role']
 

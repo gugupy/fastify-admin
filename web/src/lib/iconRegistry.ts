@@ -1,18 +1,15 @@
 import type { ComponentType } from 'react'
-import { createElement } from 'react'
-import { HugeiconsIcon } from '@hugeicons/react'
 import {
-  DatabaseLightningIcon,
-  SecurityIcon,
-  Sun01Icon,
-  Moon01Icon,
-  ComputerIcon,
-  View,
-  Edit,
-  Delete,
-  ArrowLeft01Icon,
-} from '@hugeicons/core-free-icons'
-import type { IconSvgElement } from '@hugeicons/react'
+  Database,
+  Shield,
+  Sun,
+  Moon,
+  Monitor,
+  Eye,
+  Pencil,
+  Trash2,
+  ArrowLeft,
+} from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -23,9 +20,6 @@ import type { IconSvgElement } from '@hugeicons/react'
  * @example
  * // Lucide React
  * icon: Trash2
- *
- * // HugeIcons (use asIcon helper)
- * icon: asIcon(DeleteIcon)
  *
  * // Inline SVG
  * icon: ({ size = 16, className }) => <svg width={size} height={size} className={className}>...</svg>
@@ -49,34 +43,18 @@ export type AdminIconKey =
 
 export type AdminIcons = Record<AdminIconKey, AdminIconComponent>
 
-// ── HugeIcons adapter ─────────────────────────────────────────────────────────
-
-/**
- * Wraps a HugeIcons SVG element into an `AdminIconComponent`.
- * Use this when setting entity icons or app icons from the HugeIcons library.
- *
- * @example
- * import { LayersIcon } from '@hugeicons/core-free-icons'
- * icon: asIcon(LayersIcon)
- */
-export function asIcon(hugeIcon: IconSvgElement): AdminIconComponent {
-  return function HugeIconWrapper({ size, className }) {
-    return createElement(HugeiconsIcon, { icon: hugeIcon, size, className })
-  }
-}
-
 // ── Default icon implementations ──────────────────────────────────────────────
 
 const defaults: AdminIcons = {
-  entity: asIcon(DatabaseLightningIcon),
-  security: asIcon(SecurityIcon),
-  sun: asIcon(Sun01Icon),
-  moon: asIcon(Moon01Icon),
-  system: asIcon(ComputerIcon),
-  view: asIcon(View),
-  edit: asIcon(Edit),
-  delete: asIcon(Delete),
-  arrowLeft: asIcon(ArrowLeft01Icon),
+  entity: Database,
+  security: Shield,
+  sun: Sun,
+  moon: Moon,
+  system: Monitor,
+  view: Eye,
+  edit: Pencil,
+  delete: Trash2,
+  arrowLeft: ArrowLeft,
 }
 
 // ── Registry singleton ────────────────────────────────────────────────────────
@@ -113,16 +91,12 @@ export const iconRegistry = {
    * to pass an `iconMap` parameter anymore.
    *
    * @example
-   * import { User03Icon, Package01Icon } from '@hugeicons/core-free-icons'
+   * import { User, Package } from 'lucide-react'
    *
    * iconRegistry.registerEntityIcons({
-   *   User03:   asIcon(User03Icon),
-   *   Package01: asIcon(Package01Icon),
+   *   User: User,
+   *   Package: Package,
    * })
-   *
-   * // Or with any other icon library:
-   * import { Users, Package } from 'lucide-react'
-   * iconRegistry.registerEntityIcons({ User03: Users, Package01: Package })
    */
   registerEntityIcons(icons: Record<string, AdminIconComponent>): void {
     Object.assign(entityIconMap, icons)
