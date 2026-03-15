@@ -96,7 +96,7 @@
       </a>
       <a href="#quickstart" class="btn btn-outline">Quick start →</a>
     </div>
-    <div class="install-block" style="cursor:default;opacity:0.6;">
+    <div id="installBlock" class="install-block" style="cursor:default;">
       <span class="prompt">$</span>
       <span class="cmd">npm install fastify-admin</span>
       <span class="copy-hint" style="opacity:1;color:var(--fg-muted)">coming soon</span>
@@ -113,31 +113,61 @@
 
     <div class="admin-preview">
 
-      <!-- Toolbar -->
-      <div class="admin-toolbar">
-        <input id="searchUser" placeholder="search users…" />
-        <select id="roleFilter">
-          <option value="">all roles</option>
-          <option>Admin</option>
-          <option>Editor</option>
-          <option>Viewer</option>
-        </select>
+      <!-- Sidebar -->
+      <div class="admin-sidebar">
+        <div class="admin-sidebar-logo">
+          <div class="nav-icon" style="width:20px;height:20px;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13 2L4.5 13.5H12L11 22L19.5 10.5H12L13 2Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span>My Admin</span>
+        </div>
+        <div class="admin-sidebar-section">
+          <div class="admin-sidebar-label">Entities</div>
+          <div class="admin-sidebar-item active" data-entity="users">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Users
+          </div>
+          <div class="admin-sidebar-item" data-entity="posts">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            Posts
+          </div>
+        </div>
+        <div class="admin-sidebar-section">
+          <div class="admin-sidebar-label">Security</div>
+          <div class="admin-sidebar-item" data-entity="roles">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            Roles
+          </div>
+          <div class="admin-sidebar-item" data-entity="permissions">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            Permissions
+          </div>
+        </div>
       </div>
 
-      <!-- Table -->
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>id</th>
-            <th>name</th>
-            <th>email</th>
-            <th>role</th>
-            <th></th>
-          </tr>
-        </thead>
-
-        <tbody id="adminRows"></tbody>
-      </table>
+      <!-- Main content -->
+      <div class="admin-main">
+        <div class="admin-main-header">
+          <span class="admin-entity-title" id="entityTitle">Users</span>
+          <button class="admin-create-btn">+ Create</button>
+        </div>
+        <div class="admin-toolbar">
+          <input id="previewSearch" placeholder="search…" />
+          <select id="previewFilter"><option value="">all</option></select>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead id="adminHead"><tr></tr></thead>
+            <tbody id="adminRows"></tbody>
+          </table>
+        </div>
+        <div class="admin-pagination">
+          <span id="paginationInfo"></span>
+          <span>Page 1 of 1</span>
+        </div>
+      </div>
 
     </div>
   </div>
@@ -277,8 +307,8 @@
         <pre><span class="kw">import</span> { fastifyAdmin } <span class="kw">from</span> <span class="str">'fastify-admin'</span>
 <span class="kw">import</span> { initORM } <span class="kw">from</span> <span class="str">'./db.js'</span>
 
-<span class="kw">const</span> db = <span class="kw">await</span> initORM</span>()
-<span class="kw">const</span> orm = <span class="kw">db.orm</span>
+<span class="kw">const</span> db = <span class="kw">await</span> initORM()
+<span class="kw">const</span> orm = db.orm
 
 <span class="kw">await</span> app.<span class="fn">register</span>(fastifyAdmin, {
   orm,
